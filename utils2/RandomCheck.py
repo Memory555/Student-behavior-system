@@ -52,8 +52,8 @@ class RCDialog(QWidget):
             self.setWindowIcon(QIcon(f'{rootdir}/logo_imgs/fcb_logo.jpg'))
         except FileNotFoundError as e:
             print("[ERROR] UI背景图片路径不正确！(source file: {})".format(self.current_filename), e)
-        else:
-            print("[INFO] 设置icon成功！")
+        # else:
+            # print("[INFO] 设置icon成功！")
 
         self.Dialog.pb_connect_db.clicked.connect(self.get_id_name_from_db)
 
@@ -63,7 +63,7 @@ class RCDialog(QWidget):
 
         self.Dialog.pb_fail.clicked.connect(self.answer_fail)
 
-        self.Dialog.pb_absence.clicked.connect(self.answer_absence)
+        # self.Dialog.pb_absence.clicked.connect(self.answer_absence)
 
         self.Dialog.pb_other.clicked.connect(self.answer_other)
 
@@ -88,7 +88,7 @@ class RCDialog(QWidget):
             # 初始化点名列表
             self.random_check_names = deepcopy(self.student_names)
             self.random_check_ids = deepcopy(self.student_ids)
-            print("[INFO] 查询成功！")
+            # print("[INFO] 查询成功！")
 
     # 随机点名
     def start_random_check(self):
@@ -124,13 +124,14 @@ class RCDialog(QWidget):
     def answer_fail(self):
         print(self.rc_id, self.rc_name, self.current_time, "回答失败")
 
-    # 未到
-    def answer_absence(self):
-        print(self.rc_id, self.rc_name, self.current_time, "未到")
+    # # 未到
+    # def answer_absence(self):
+    #     print(self.rc_id, self.rc_name, self.current_time, "未到")
 
-    # 其它情况
+    # 退出
     def answer_other(self):
-        print(self.rc_id, self.rc_name, self.current_time, "其他情况")
+        # print(self.rc_id, self.rc_name, self.current_time, "其他情况")
+        self.close()
 
     def handle_click(self):
         if not self.isVisible():

@@ -4,6 +4,8 @@ import sys
 import pymysql
 
 # 全局变量
+# 全局变量[学号]
+num_list =[]
 # 摄像头ID
 CAMERA_ID = 0
 # 默认采集人脸数量
@@ -56,8 +58,8 @@ def statical_facedata_nums():
     return files_num_dict
 
 
-print(os.path.basename(__file__))
+# print(os.path.basename(__file__))
 
 if __name__ == '__main__':
     files = statical_facedata_nums()
-    print(files)
+    # print(files)

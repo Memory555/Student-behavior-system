@@ -51,8 +51,11 @@ class Ui_Form(object):
         self.label_capture.setText("")
         self.label_capture.setObjectName("label_capture")
         self.bt_take_photo = QtWidgets.QPushButton(Form) # 拍照
-        self.bt_take_photo.setGeometry(QtCore.QRect(270, 510, 151, 41))
+        self.bt_take_photo.setGeometry(QtCore.QRect(150, 510, 151, 41))
         self.bt_take_photo.setObjectName("bt_take_photo")
+        self.bt_exit = QtWidgets.QPushButton(Form)  # 拍照
+        self.bt_exit.setGeometry(QtCore.QRect(350, 510, 151, 41))
+        self.bt_exit.setObjectName("bt_exit")
         # self.lineEdit_id = QtWidgets.QLineEdit(Form) # 学号空白框
         # self.lineEdit_id.setGeometry(QtCore.QRect(610, 40, 141, 21))
         # self.lineEdit_id.setObjectName("lineEdit_id")
@@ -106,6 +109,7 @@ class Ui_Form(object):
         # self.bt_change_info.raise_()
         self.label_capture.raise_()
         self.bt_take_photo.raise_()
+        self.bt_exit.raise_()
         # self.bt_sure.raise_()
         # self.lineEdit_id.raise_()
         # self.lineEdit_name.raise_()
@@ -127,7 +131,8 @@ class Ui_Form(object):
         Form.setTabOrder(self.bt_start_collect, self.checkBox_auto_collect)
         Form.setTabOrder(self.checkBox_auto_collect, self.spinBox_set_num)
         Form.setTabOrder(self.spinBox_set_num, self.bt_take_photo)
-        Form.setTabOrder(self.bt_take_photo, self.tableView)
+        Form.setTabOrder(self.bt_take_photo, self.bt_exit)
+        Form.setTabOrder(self.bt_exit, self.tableView)
         # Form.setTabOrder(self.lineEdit_id, self.lineEdit_name)
         # Form.setTabOrder(self.lineEdit_name, self.lineEdit_class)
         # Form.setTabOrder(self.lineEdit_class, self.lineEdit_sex)
@@ -154,6 +159,7 @@ class Ui_Form(object):
         self.label_title.setText(_translate("Form", "人脸识别个人信息采集系统"))
         # self.bt_check_info.setText(_translate("Form", "查询信息"))
         self.bt_take_photo.setText(_translate("Form", "拍照"))
+        self.bt_exit.setText(_translate("Form", "退出"))
         self.label_collected.setText(_translate("Form", "已采集"))
         self.label_collected_num.setText(_translate("Form", "采集数目"))
         self.checkBox_auto_collect.setText(_translate("Form", "自动采集"))

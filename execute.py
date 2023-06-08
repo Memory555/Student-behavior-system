@@ -2,11 +2,13 @@ import os
 import pickle
 import sys
 import threading
+import time
 from datetime import datetime
 from copy import deepcopy
 import cv2
 import imutils
 import numpy as np
+import openpyxl
 # 导入数据库操作包
 import pymysql
 # 导入界面处理包
@@ -33,13 +35,15 @@ from utils2 import GeneratorModel
 from utils2.BlinksDetectionThread import BlinksDetectThread
 # 导入信息采集槽函数类
 from utils2.InfoDialog import InfoDialog
+
 # 导入随机点名类
 from utils2.RandomCheck import RCDialog
 # 添加数据库连接操作
 from utils2.GlobalVar import connect_to_sql
-
+# 导入分析详情槽函数类
+from utils2.Detaillog import Detaillog
 # 导入考勤状态判断相关函数
-from utils2.AttendanceCheck import attendance_check
+# from utils2.AttendanceCheck import attendance_check
 from utils2.GlobalVar import FR_LOOP_NUM, statical_facedata_nums
 
 # # 为方便调试，修改后导入模块，重新导入全局变量模块
@@ -55,23 +59,21 @@ sys.path.append(os.getcwd())
 
 # 导入全局变量，主要包含摄像头ID等
 from utils2.GlobalVar import CAMERA_ID
+from utils2.GlobalVar import num_list
 
 import cv2 as cv
 import numpy as np
 from openvino.inference_engine import IECore
 
-# 加载FaceNet人脸识别模型
-model_xml = "E:/soft/smart/Face-Recognition-Class-Attendance-System-master/emo/intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml"
-model_bin = "E:/soft/smart/Face-Recognition-Class-Attendance-System-master/emo/intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin"
+# # 全局变量[学号]
+# num_list =[]
+# 全局变量[情绪]
+emo_list = []
+# 全局变量[起始时间]
+start_time = []
+# 全局变量[姓名]
+student_name_list = []
 
-labels = ['neutral', 'happy', 'sad', 'surprise', 'anger']
-
-ie = IECore()
-emotion_net = ie.read_network(model=model_xml, weights=model_bin)
-
-input_blob = next(iter(emotion_net.input_info))
-
-exec_net = ie.load_network(network=emotion_net, device_name="CPU", num_requests=2)
 
 class MainWindow(QtWidgets.QMainWindow):
     # 类构造函数
@@ -79,6 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # super()构造器方法返回父级的对象。__init__()方法是构造器的一个方法。
         super().__init__()
         # self.ui = MainUI.Ui_Form()
+        self.line_text_info3 = []
         self.ui = MainWindowUI.Ui_MainWindow()
         self.ui.setupUi(self)
 
@@ -133,6 +136,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.bt_exit.clicked.connect(self.quit_window)
         # 设置信息采集按键连接
         self.ui.bt_gathering.clicked.connect(self.open_info_dialog)
+        # # 设置分析详情按键连接
+        # self.ui.bt_detailing.clicked.connect(self.open_detail_dialog)
+
         # 设置区分打开摄像头还是人脸识别的标识符
         self.switch_bt = 0
 
@@ -151,7 +157,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lineEdit_leave.setClearButtonEnabled(True)
         self.ui.lineEdit_supplement.setClearButtonEnabled(True)
         # # 设置查看结果（显示未到和迟到）按键的连接函数
-        # self.ui.bt_view.clicked.connect(self.show_late_absence)
+        self.ui.bt_listName1.clicked.connect(self.show_late_absence)
+        # 导出函数
+        self.ui.bt_output.clicked.connect(self.import_late_absence)
         # 核验本地人脸数据集与数据库中的ID是否一致，即验证是否有未录入数据库的情况，以及是否有未采集人脸的情况。
         self.ui.bt_check_variation.clicked.connect(self.check_variation_db)
 
@@ -303,10 +311,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     # 传入到ResNet-SSD以检测人脸
                     detections = detector.forward()
 
-                    # 初始化一个列表，用于保存识别到的人脸
+                    # 初始化一个列表，用于保存识别到的人脸学号
                     face_names = []
                     # 初始化一个列表，用于保存识别到的情绪
                     emo_txt = []
+                    # # 初始化一个列表，用于保存识别到的姓名
+                    # student_name = []
 
                     # 在检测结果中循环检测
                     # 注意：这里detection为ResNet-SSD网络的输出，与阈值的设置有关，具体可以参考prototxt文件的输出层，输出shape为[1, 1, 200, 7]
@@ -329,20 +339,33 @@ class MainWindow(QtWidgets.QMainWindow):
                             # x_left_bottom, y_left_bottom, x_right_top, y_right_top
                             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                             (startX, startY, endX, endY) = box.astype("int")
-                            left = detections[0, 0, i, 3] * w
-                            top = detections[0, 0, i, 4] * h
-                            right = detections[0, 0, i, 5] * w
-                            bottom = detections[0, 0, i, 6] * h
+                            # left = detections[0, 0, i, 3] * w
+                            # top = detections[0, 0, i, 4] * h
+                            # right = detections[0, 0, i, 5] * w
+                            # bottom = detections[0, 0, i, 6] * h
 
 
                             roi = frame[startY:endY, startX:endX, :]
                             image = cv2.resize(roi, (64, 64))
                             # image = cv2.resize(roi, (300, 300))
                             image = image.transpose((2, 0, 1))  # Change data layout from HWC to CHW
+
+                            # 加载FaceNet人脸识别模型
+                            model_xml = "E:/soft/smart/Face-Recognition-Class-Attendance-System-master/emo/intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml"
+                            model_bin = "E:/soft/smart/Face-Recognition-Class-Attendance-System-master/emo/intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin"
+
+                            labels = ['neutral', 'happy', 'sad', 'surprise', 'anger']
+
+                            ie = IECore()
+                            emotion_net = ie.read_network(model=model_xml, weights=model_bin)
+
+                            input_blob = next(iter(emotion_net.input_info))
+
+                            exec_net = ie.load_network(network=emotion_net, device_name="CPU", num_requests=2)
                             res = exec_net.infer(inputs={input_blob: [image]})
                             prob_emotion = res['prob_emotion']
                             probs = np.reshape(prob_emotion, 5)
-                            txt = labels[np.argmax(probs)]
+                            txt = labels[np.argmax(probs)] # 取概率最大的情绪
                             # cv2.putText(frame, txt, (np.int32(left), np.int32(top)), cv2.FONT_HERSHEY_SIMPLEX, 1.0,
                             #            (255, 0, 0), 2)
                             # cv2.rectangle(frame, (np.int32(left), np.int32(top)),
@@ -389,8 +412,123 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 2)
                             face_names.append(name)
                             emo_txt.append(txt)
-                            # print(face_names)
-                            # print(emo_txt)
+
+                            results_name = ''
+
+                            # 执行查询
+                            try:
+                                # 打开数据库连接
+                                db, cursor = connect_to_sql()
+                            except ConnectionError as e:
+                                print("[Error] 数据库连接失败！")
+                            try:
+                                sql = "select name from students where ID = {}".format(name)  # 查找姓名
+                                cursor.execute(sql)
+                                results = cursor.fetchall()
+                            finally:
+                                # 提交到数据库执行
+                                db.commit()
+                                cursor.close()
+                                db.close()
+
+                            for item in results:
+                                # self.student_ids.append(item[0])
+                                results_name = item[0]
+
+
+                            # 放入全局列表中
+                            if len(num_list) == 0:
+                                num_list.append(name)
+                                emo_list.append(txt)
+                                student_name_list.append(results_name)
+                                # 获取系统时间，保存到秒
+                                current_time = datetime.now()
+                                start_time.append(current_time)
+                            else: # 通过学号判断是否需要加入全局列表
+                                flag = 0
+                                num  = 0
+                                for i in range(len(num_list)):
+                                    if name == num_list[i]:
+                                        flag = 1 # 全局列表中已经存在
+                                        num = i
+                                        break
+                                if flag == 0:
+                                    num_list.append(name)
+                                    emo_list.append(txt)
+                                    student_name_list.append(results_name)
+                                    current_time = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                                    start_time.append(current_time)
+                                else:
+                                    if txt != emo_list[num]: # 判断情绪是否相同
+                                        emo_list[num] = txt
+                                        current_time = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                                        start_time[num] = current_time
+
+                            temp = []
+                            for i in range(len(num_list)):
+                                flag = 0
+                                for j in range(len(face_names)):
+                                    if num_list[i] == face_names[j]:
+                                        flag = 1
+                                if flag == 0:
+                                    temp.append(i)
+
+                            for i in temp:
+                                # 已经不在识别框的学号剔除
+                                del num_list[i]
+                                del emo_list[i]
+                                del start_time[i]
+                                del student_name_list[i]
+                                # # 删除数据库对应内容
+                                # try:
+                                #     # 打开数据库连接
+                                #     db, cursor = connect_to_sql()
+                                # except ConnectionError as e:
+                                #     print("[Error] 数据库连接失败！")
+                                # # 删除数据
+                                # num = 0
+                                # try:
+                                #     num = int(num_list[i])
+                                #     # print("num",num)
+                                #     sql = "delete from detail where ID = {}".format(num)
+                                #     cursor.execute(sql)
+                                # # except ConnectionAbortedError as e:
+                                # #     self.ui.textBrowser_log.append("[INFO] 数据删除失败!")
+                                # # else:
+                                # #     self.ui.textBrowser_log.append("[INFO] 数据写入成功!")
+                                # finally:
+                                #     # 提交到数据库执行
+                                #     db.commit()
+                                #     cursor.close()
+                                #     db.close()
+                            # global num_global
+                            num_global = num_list
+                            for kk in range(len(num_list)):
+                                # 写入数据库中（建立新表）
+                                try:
+                                    # 打开数据库连接
+                                    db, cursor = connect_to_sql()
+                                except ConnectionError as e:
+                                    print("[Error] 数据库连接失败！")
+                                self.line_text_info3.append((num_list[kk], student_name_list[kk], emo_list[kk], start_time[kk]))
+                                # print("line_text_info3", self.line_text_info3)
+                                # 写入数据库
+                                try:
+                                    # 如果存在数据，先删除再写入。前提是设置唯一索引字段或者主键。
+                                    insert_sql3 = "replace into detail(ID, Name, Emo, starttime) values(%s, %s, %s, %s)"
+                                    users3 = self.line_text_info3
+                                    cursor.executemany(insert_sql3, users3)
+                                # except ConnectionAbortedError as e:
+                                #     self.ui.textBrowser_log.append("[INFO] 数据库写入失败!")
+                                # else:
+                                #     self.ui.textBrowser_log.append("[INFO] 数据库写入成功!")
+                                    # QMessageBox.information(self, "Tips", "签到成功，请勿重复操作！", QMessageBox.Ok)
+                                finally:
+                                    # 提交到数据库执行
+                                    db.commit()
+                                    cursor.close()
+                                    db.close()
+
                             # 统计各情绪数量
                             emo_count = Counter(emo_txt)
                             emo_len = len(emo_txt)
@@ -422,6 +560,9 @@ class MainWindow(QtWidgets.QMainWindow):
                                 self.ui.label_emo6_6.setText('0.00%')
                             if step5 == 0:
                                 self.ui.label_emo4_4.setText('0.00%')
+
+                    # face_names1 = face_names # 保存上一次的结果
+                    # emo_txt1 = emo_txt
 
                     # bt_liveness = self.ui.bt_blinks.text()
                     # if bt_liveness == '停止检测':
@@ -775,74 +916,149 @@ class MainWindow(QtWidgets.QMainWindow):
             except ConnectionAbortedError as e:
                 self.ui.textBrowser_log.append("[ERROR] 数据库连接失败！")
             finally:
+                db.commit()
                 cursor.close()
                 db.close()
 
-    # # 显示迟到和未到
-    # def show_late_absence(self):
-    #     db, cursor = connect_to_sql()
-    #     # 一定要注意字符串在检索时要加''！
-    #     sql1 = "select name from checkin where Description = '{}'".format('迟到')
-    #     sql2 = "select name from students"
-    #     try:
-    #         cursor.execute(sql1)
-    #         results = cursor.fetchall()
-    #         self.late_students = []
-    #         for x in results:
-    #             self.late_students.append(x[0])
-    #         self.late_students.sort()
-    #         # self.ui.textBrowser_log.append(self.late_students)
-    #     except ConnectionAbortedError as e:
-    #         self.ui.textBrowser_log.append('[INFO] 查询迟到数据失败', e)
-    #
-    #     try:
-    #         cursor.execute(sql2)
-    #         results2 = cursor.fetchall()
-    #         self.students_id = []
-    #         for i in results2:
-    #             self.students_id.append(i[0])
-    #         self.students_id.sort()
-    #         print(self.students_id)
-    #     except ConnectionAbortedError as e:
-    #         self.ui.textBrowser_log.append('[INFO] 查询未到数据失败', e)
-    #
-    #     finally:
-    #         db.commit()
-    #         cursor.close()
-    #         db.close()
-    #
-    #     # 集合运算，算出未到的和迟到的
-    #     self.absence_nums = set(set(self.students_id) - set(self.late_students))
-    #     self.absence_nums = list(self.absence_nums)
-    #     self.absence_nums.sort()
-    #
-    #     # # 在控件中显示未到的同学
-    #     # n_row_late = len(self.late_students)
-    #     # n_row_absence= len(self.absence_nums)
-    #     # model1 = QtGui.QStandardItemModel(n_row_late, 0)
-    #     # # 设置数据行、列标题
-    #     # model1.setHorizontalHeaderLabels(['姓名'])
-    #     # # 设置填入数据内容
-    #     # for row in range(n_row_late):
-    #     #     item = QtGui.QStandardItem(self.late_students[row])
-    #     #     # 设置每个位置的文本值
-    #     #     model1.setItem(row, 0, item)
-    #     # # 指定显示的tableView控件，实例化表格视图
-    #     # table_view1 = self.ui.tableView_escape
-    #     # table_view1.setModel(model1)
-    #
-    #     # # 迟到显示
-    #     # module2 = QtGui.QStandardItemModel(rowAbsentee, 0)
-    #     # # 设置数据行、列标题
-    #     # module2.setHorizontalHeaderLabels(['姓名'])
-    #     # # 设置填入数据内容
-    #     # for row in range(rowAbsentee):
-    #     #     item = QtGui.QStandardItem(self.absence_nums[row])
-    #     #     # 设置每个位置的文本值
-    #     #     module2.setItem(row, 0, item)
-    #     # # 指定显示的tableView控件，实例化表格视图
-    #     # table_view2 = self.ui.tableView_late
-    #     # table_view2.setModel(module2)
+    # 显示未到
+    def show_late_absence(self):
+        try:
+            db, cursor = connect_to_sql()
+        except ConnectionAbortedError as e:
+            self.ui.textBrowser_log.append('[INFO] 连接数据库失败，请检查配置信息！')
+        else:
+            sql = "select ID, Name, Class from students" # 学生信息
+
+            sql2 = "select * from checkin"  # 考勤信息
+            # 执行查询，全部学生
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            # print("results", results)
+            self.student_ids = []
+            self.student_names = []
+            self.student_class = []
+            # self.student_time = []
+            for item in results:
+                self.student_ids.append(item[0])
+                self.student_names.append(item[1])
+                self.student_class.append(item[2])
+                # self.student_time.append(item[3])
+
+            # 执行查询，已经到了的
+            cursor.execute(sql2)
+            result2 = cursor.fetchall()
+            # print("result2",result2)
+            self.student_ids2 = []
+            self.student_names2 = []
+            self.student_class2 = []
+            # self.student_time = []
+            current_year = datetime.now().year
+            current_month= datetime.now().month
+            current_day = datetime.now().day
+            for item in result2:
+                if current_year == item[3].year and current_month == item[3].month and current_day == item[3].day:
+                    self.student_ids2.append(item[1])
+                    self.student_names2.append(item[0])
+                    self.student_class2.append(item[2])
+        finally:
+            db.commit()
+            cursor.close()
+            db.close()
+        if len(self.student_ids) == 0:
+            QMessageBox.warning(self, "Yes", "全员到齐", QMessageBox.Ok)
+        else:
+            # 设置显示数据层次结构，4行4列(包含行表头)
+            table_view_module = QtGui.QStandardItemModel(len(self.student_ids) - len(self.student_ids2), 1)
+            table_view_module.setHorizontalHeaderLabels(['学号', '姓名', '班级'])
+
+            step = 0
+            for i in range(len(self.student_ids)):
+                flag = 0
+                for j in range(len(self.student_ids2)):
+                    if self.student_ids[i] == self.student_ids2[j]:
+                        flag = 1
+                if flag == 0: # 未到
+                    id = self.student_ids[i]
+                    num = QtGui.QStandardItem(str(id))
+                    name = self.student_names[i]
+                    # print("name",name)
+                    name = QtGui.QStandardItem(name)
+                    Class = self.student_class[i]
+                    Class = QtGui.QStandardItem(Class)
+                    # 设置每个位置的行名称和文本值
+                    table_view_module.setItem(step, 0, num)
+                    table_view_module.setItem(step, 1, name)
+                    table_view_module.setItem(step, 2, Class)
+                    step = step + 1
+
+            # 指定显示的tableView_escape控件，实例化表格视图
+            self.ui.tableView_escape.setModel(table_view_module)
+
+
+    # 导出未到学生
+    def import_late_absence(self):
+        self.address = QtWidgets.QFileDialog.getExistingDirectory(None, "选取文件夹", "C:/")  # 起始路径
+        try:
+            db, cursor = connect_to_sql()
+        except ConnectionAbortedError as e:
+            self.ui.textBrowser_log.append('[INFO] 连接数据库失败，请检查配置信息！')
+        else:
+            sql = "select ID, Name, Class from students" # 学生信息
+
+            sql2 = "select * from checkin"  # 考勤信息
+            # 执行查询，全部学生
+            cursor.execute(sql)
+            results = cursor.fetchall()
+            # print("results", results)
+            self.student_ids = []
+            self.student_names = []
+            self.student_class = []
+            # self.student_time = []
+            for item in results:
+                self.student_ids.append(item[0])
+                self.student_names.append(item[1])
+                self.student_class.append(item[2])
+                # self.student_time.append(item[3])
+
+            # 执行查询，已经到了的
+            cursor.execute(sql2)
+            result2 = cursor.fetchall()
+            # print("result2",result2)
+            self.student_ids2 = []
+            self.student_names2 = []
+            self.student_class2 = []
+            # self.student_time = []
+            current_year = datetime.now().year
+            current_month= datetime.now().month
+            current_day = datetime.now().day
+            for item in result2:
+                if current_year == item[3].year and current_month == item[3].month and current_day == item[3].day:
+                    self.student_ids2.append(item[1])
+                    self.student_names2.append(item[0])
+                    self.student_class2.append(item[2])
+        finally:
+            db.commit()
+            cursor.close()
+            db.close()
+        wb = openpyxl.Workbook()  # 创建工作簿对象
+        current_year = str(current_year)
+        current_month = str(current_month)
+        current_day = str(current_day)
+        ws = wb['Sheet']  # 创建子表
+        ws.append(['学号', '姓名', '班级'])  # 添加表头
+        for i in range(len(self.student_ids)):
+            flag = 0
+            for j in range(len(self.student_ids2)):
+                if self.student_ids[i] == self.student_ids2[j]:
+                    flag = 1
+            if flag == 0: # 未到
+                id = self.student_ids[i]
+                name = self.student_names[i]
+                Class = self.student_class[i]
+                data = id, name, Class
+                ws.append(data)  # 每次写入一行
+        tablename = current_year + '年' + current_month + '月' + current_day + '日缺勤名单'
+        wb.save(self.address + '\\' + tablename + '.xlsx')
 
     # 训练人脸识别模型，静态方法
     # @staticmethod
@@ -860,6 +1076,9 @@ class MainWindow(QtWidgets.QMainWindow):
             QMessageBox.warning(self, "Warning", "为防止摄像头冲突，已自动关闭摄像头！", QMessageBox.Ok)
             self.cap.release()
 
+    # def open_detail_dialog(self):
+
+
     def quit_window(self):
         if self.cap.isOpened():
             self.cap.release()
@@ -871,8 +1090,10 @@ if __name__ == '__main__':
     # 创建并显示窗口
     mainWindow = MainWindow()
     infoWindow = InfoDialog()
+    detailWindow = Detaillog()
     rcWindow = RCDialog()
     mainWindow.ui.bt_gathering.clicked.connect(infoWindow.handle_click)
+    mainWindow.ui.bt_analyse.clicked.connect(detailWindow.handle_click)
     mainWindow.ui.bt_random_check.clicked.connect(rcWindow.handle_click)
     mainWindow.show()
     sys.exit(app.exec_())

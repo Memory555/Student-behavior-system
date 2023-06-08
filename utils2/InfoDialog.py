@@ -52,6 +52,8 @@ class InfoDialog(QWidget):
         # self.Dialog.bt_change_info.clicked.connect(self.change_info)
         # 查看人脸图片数量案件连接函数
         self.Dialog.bt_check_dirs_faces.clicked.connect(self.check_dir_faces_num)
+        # 退出
+        self.Dialog.bt_exit.clicked.connect(self.check_exit)
 
         # 初始化摄像头
         # self.cap = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
@@ -156,9 +158,9 @@ class InfoDialog(QWidget):
             photo_save_path = os.path.join(os.path.dirname(os.path.abspath('__file__')), '{}'.format(self.filename))
             save_filename = datetime.now().strftime("%Y%m%d%H%M%S") + ".png"
             self.showImage.save(photo_save_path + save_filename)
-        else:
-            p = os.path.sep.join([output, "{}.png".format(str(total).zfill(5))])
-            cv2.imwrite(p, self.showImage)
+        # else:
+        #     p = os.path.sep.join([output, "{}.png".format(str(total).zfill(5))])
+        #     cv2.imwrite(p, self.showImage)
 
         self.Dialog.lcdNumber_collection_nums.display(self.have_token_photos)
 
@@ -257,68 +259,71 @@ class InfoDialog(QWidget):
     def check_dir_faces_num(self):
         num_dict = statical_facedata_nums()
         keys = list(num_dict.keys())
-        values = list(num_dict.values())
+        # values = list(num_dict.values())
         # print(values)
         # 如果没有人脸文件夹，则提示用户采集数据
         if len(keys) == 0:
             QMessageBox.warning(self, "Error", "face_dataset文件夹下没有人脸数据，请马上录入！", QMessageBox.Ok)
         else:
-            # 设置显示数据层次结构，5行2列(包含行表头)
+            # 设置显示数据层次结构，行1列(包含行表头)
             table_view_module = QtGui.QStandardItemModel(len(keys), 1)
-            table_view_module.setHorizontalHeaderLabels(['ID', 'Number'])
+            table_view_module.setHorizontalHeaderLabels(['ID'])
 
             for row, key in enumerate(keys):
-                print(key, values[row])
+                # print(key, values[row])
                 id = QtGui.QStandardItem(key)
-                num = QtGui.QStandardItem(str(values[row]))
+                # num = QtGui.QStandardItem(str(values[row]))
 
                 # 设置每个位置的行名称和文本值
                 table_view_module.setItem(row, 0, id)
-                table_view_module.setItem(row, 1, num)
+                # table_view_module.setItem(row, 1, num)
 
             # 指定显示的tableView控件，实例化表格视图
             self.Dialog.tableView.setModel(table_view_module)
 
-    # 将采集信息写入数据库
-    def write_info(self):
-        # 存放信息的列表
-        users = []
-        # 信息是否完整标志位
-        is_info_full = False
-        student_id = self.Dialog.lineEdit_id.text()
-        name = self.Dialog.lineEdit_name.text()
-        which_class = self.Dialog.lineEdit_class.text()
-        sex = self.Dialog.lineEdit_sex.text()
-        birth = self.Dialog.lineEdit_birth.text()
-        users.append((student_id, name, which_class, sex, birth))
-        # 如果有空行，为False，则不执行写入数据库操作；反之为True，执行写入
-        # Python内置函数all的作用是：如果用于判断的可迭代对象中全为True，则结果为True；反之为False
-        if all([student_id, name, which_class, sex, birth]):
-            is_info_full = True
-        return is_info_full, users
+    # # 将采集信息写入数据库
+    # def write_info(self):
+    #     # 存放信息的列表
+    #     users = []
+    #     # 信息是否完整标志位
+    #     is_info_full = False
+    #     student_id = self.Dialog.lineEdit_id.text()
+    #     name = self.Dialog.lineEdit_name.text()
+    #     which_class = self.Dialog.lineEdit_class.text()
+    #     sex = self.Dialog.lineEdit_sex.text()
+    #     birth = self.Dialog.lineEdit_birth.text()
+    #     users.append((student_id, name, which_class, sex, birth))
+    #     # 如果有空行，为False，则不执行写入数据库操作；反之为True，执行写入
+    #     # Python内置函数all的作用是：如果用于判断的可迭代对象中全为True，则结果为True；反之为False
+    #     if all([student_id, name, which_class, sex, birth]):
+    #         is_info_full = True
+    #     return is_info_full, users
 
-    # 添加修改信息
-    def change_info(self):
-        # 写入数据库
-        try:
-            db, cursor = connect_to_sql()
-            # 如果存在数据，先删除再写入。前提是设置唯一索引字段或者主键。
-            insert_sql = "replace into students(ID, Name, Class, Sex, Birthday) values(%s, %s, %s, %s, %s)"
+    # # 添加修改信息
+    # def change_info(self):
+    #     # 写入数据库
+    #     try:
+    #         db, cursor = connect_to_sql()
+    #         # 如果存在数据，先删除再写入。前提是设置唯一索引字段或者主键。
+    #         insert_sql = "replace into students(ID, Name, Class, Sex, Birthday) values(%s, %s, %s, %s, %s)"
+    #
+    #         flag, users = self.write_info()
+    #         if flag:
+    #             cursor.executemany(insert_sql, users)
+    #             QMessageBox.warning(self, "Warning", "修改成功，请勿重复操作！", QMessageBox.Ok)
+    #         else:
+    #             QMessageBox.information(self, "Error", "修改失败！请保证每个属性不为空！", QMessageBox.Ok)
+    #     # 捕获所有除系统退出以外的所有异常
+    #     except Exception as e:
+    #         print("[ERROR] sql execute failed!", e)
+    #
+    #     finally:
+    #         # 提交到数据库执行
+    #         db.commit()
+    #         # 关闭数据库
+    #         cursor.close()
+    #         # 关闭数据库连接
+    #         db.close()
 
-            flag, users = self.write_info()
-            if flag:
-                cursor.executemany(insert_sql, users)
-                QMessageBox.warning(self, "Warning", "修改成功，请勿重复操作！", QMessageBox.Ok)
-            else:
-                QMessageBox.information(self, "Error", "修改失败！请保证每个属性不为空！", QMessageBox.Ok)
-        # 捕获所有除系统退出以外的所有异常
-        except Exception as e:
-            print("[ERROR] sql execute failed!", e)
-            
-        finally:
-            # 提交到数据库执行
-            db.commit()
-            # 关闭数据库
-            cursor.close()
-            # 关闭数据库连接
-            db.close()
+    def check_exit(self):
+        self.close()

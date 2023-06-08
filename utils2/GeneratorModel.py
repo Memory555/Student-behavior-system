@@ -140,3 +140,8 @@ def TrainModel():
     f = open(le_path, "wb")
     f.write(pickle.dumps(le))
     f.close()
+#
+# print("开始训练")
+# Generator()
+# TrainModel()
+# print("训练完成")

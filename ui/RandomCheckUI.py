@@ -19,10 +19,10 @@ class Ui_Form(object):
         self.pb_success.setGeometry(QtCore.QRect(30, 160, 101, 41))
         self.pb_success.setObjectName("pb_success") # 成功回答
         self.label = QtWidgets.QLabel(Form) # 姓名
-        self.label.setGeometry(QtCore.QRect(250, 90, 51, 41))
+        self.label.setGeometry(QtCore.QRect(220, 90, 51, 41))
         self.label.setObjectName("label")
         self.pb_fail = QtWidgets.QPushButton(Form)
-        self.pb_fail.setGeometry(QtCore.QRect(150, 160, 101, 41))
+        self.pb_fail.setGeometry(QtCore.QRect(200, 160, 101, 41))
         self.pb_fail.setObjectName("pb_fail") # 回答失败
         self.label_id = QtWidgets.QLabel(Form) # 学号
         self.label_id.setGeometry(QtCore.QRect(30, 90, 51, 41))
@@ -30,12 +30,12 @@ class Ui_Form(object):
         self.pb_other = QtWidgets.QPushButton(Form) # 退出
         self.pb_other.setGeometry(QtCore.QRect(370, 160, 81, 41))
         self.pb_other.setObjectName("pb_other")
-        self.label_name = QtWidgets.QLabel(Form) # 姓名
-        self.label_name.setGeometry(QtCore.QRect(280, 90, 151, 31))
-        self.label_name.setText("")
-        self.label_name.setObjectName("label_name")
+        # self.label_name = QtWidgets.QLabel(Form) # 姓名
+        # self.label_name.setGeometry(QtCore.QRect(280, 90, 151, 31))
+        # self.label_name.setText("")
+        # self.label_name.setObjectName("label_name")
         self.lcdNumber_id = QtWidgets.QLCDNumber(Form)
-        self.lcdNumber_id.setGeometry(QtCore.QRect(100, 90, 101, 41)) # 学号输出框
+        self.lcdNumber_id.setGeometry(QtCore.QRect(100, 90, 101, 41))  # 学号输出框
         self.lcdNumber_id.setObjectName("lcdNumber_id")
         self.pb_start = QtWidgets.QPushButton(Form) # 开始筛选幸运观众
         self.pb_start.setGeometry(QtCore.QRect(180, 20, 271, 41))
@@ -44,11 +44,11 @@ class Ui_Form(object):
         self.pb_connect_db.setGeometry(QtCore.QRect(30, 20, 131, 41))
         self.pb_connect_db.setObjectName("pb_connect_db")
         self.textBrowser_name = QtWidgets.QTextBrowser(Form)
-        self.textBrowser_name.setGeometry(QtCore.QRect(310, 90, 141, 41))
+        self.textBrowser_name.setGeometry(QtCore.QRect(280, 90, 181, 41))  # 姓名输出框
         self.textBrowser_name.setObjectName("textBrowser_name")
-        self.pb_absence = QtWidgets.QPushButton(Form)
-        self.pb_absence.setGeometry(QtCore.QRect(270, 160, 81, 41))
-        self.pb_absence.setObjectName("pb_absence")
+        # self.pb_absence = QtWidgets.QPushButton(Form)
+        # self.pb_absence.setGeometry(QtCore.QRect(270, 160, 81, 41))
+        # self.pb_absence.setObjectName("pb_absence")
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -63,7 +63,7 @@ class Ui_Form(object):
         self.pb_other.setText(_translate("Form", "退出"))
         self.pb_start.setText(_translate("Form", "开始筛选幸运观众"))
         self.pb_connect_db.setText(_translate("Form", "连接数据库"))
-        self.pb_absence.setText(_translate("Form", "未到"))
+        # self.pb_absence.setText(_translate("Form", "未到"))
 
 
 if __name__ == "__main__":

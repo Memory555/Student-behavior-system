@@ -29,7 +29,7 @@ class Ui_MainWindow(object):
         self.bt_random_check.setGeometry(QtCore.QRect(860, 740, 211, 41))
         self.bt_random_check.setObjectName("bt_random_check")
         self.bt_supplement = QtWidgets.QPushButton(self.centralwidget) # 漏签补签
-        self.bt_supplement.setGeometry(QtCore.QRect(970, 640, 101, 31))
+        self.bt_supplement.setGeometry(QtCore.QRect(970, 700, 101, 31))
         self.bt_supplement.setObjectName("bt_supplement")
         # self.tableView_late = QtWidgets.QTableView(self.centralwidget)
         # self.tableView_late.setGeometry(QtCore.QRect(860, 360, 211, 141))
@@ -43,7 +43,7 @@ class Ui_MainWindow(object):
         self.line_1.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line_1.setObjectName("line_1")
         self.lineEdit_supplement = QtWidgets.QLineEdit(self.centralwidget) # 漏签补签输入框
-        self.lineEdit_supplement.setGeometry(QtCore.QRect(860, 640, 101, 31))
+        self.lineEdit_supplement.setGeometry(QtCore.QRect(860, 700, 101, 31))
         self.lineEdit_supplement.setObjectName("lineEdit_supplement")
         self.textBrowser_log = QtWidgets.QTextBrowser(self.centralwidget)
         self.textBrowser_log.setGeometry(QtCore.QRect(350, 690, 301, 161))
@@ -76,11 +76,11 @@ class Ui_MainWindow(object):
         self.bt_analyse.setGeometry(QtCore.QRect(660, 760, 181, 61))
         self.bt_analyse.setObjectName("bt_analyse")
         self.tableView_escape = QtWidgets.QTableView(self.centralwidget) # 未到记录表
-        self.tableView_escape.setGeometry(QtCore.QRect(860, 450, 211, 141))
+        self.tableView_escape.setGeometry(QtCore.QRect(860, 450, 211,201))
         self.tableView_escape.setObjectName("tableView_escape")
-        self.bt_renew = QtWidgets.QPushButton(self.centralwidget) # 手动刷新
-        self.bt_renew.setGeometry(QtCore.QRect(860, 680, 211, 51))
-        self.bt_renew.setObjectName("bt_renew")
+        # self.bt_renew = QtWidgets.QPushButton(self.centralwidget) # 手动刷新
+        # self.bt_renew.setGeometry(QtCore.QRect(860, 680, 211, 51))
+        # self.bt_renew.setObjectName("bt_renew")
         # self.label_lcdName2 = QtWidgets.QLabel(self.centralwidget) # 实到
         # self.label_lcdName2.setGeometry(QtCore.QRect(860, 190, 31, 16))
         # self.label_lcdName2.setObjectName("label_lcdName2")
@@ -116,7 +116,7 @@ class Ui_MainWindow(object):
         self.label_logo.setText("")
         self.label_logo.setObjectName("label_logo")
         self.bt_leave = QtWidgets.QPushButton(self.centralwidget) # 请假登记
-        self.bt_leave.setGeometry(QtCore.QRect(970, 600, 101, 31))
+        self.bt_leave.setGeometry(QtCore.QRect(970, 660, 101, 31))
         self.bt_leave.setObjectName("bt_leave")
         # self.bt_check = QtWidgets.QPushButton(self.centralwidget) # 查询
         # self.bt_check.setGeometry(QtCore.QRect(980, 140, 91, 71))
@@ -138,11 +138,11 @@ class Ui_MainWindow(object):
         # self.comboBox_class.addItem("")
         # self.comboBox_class.addItem("")
         self.lineEdit_leave = QtWidgets.QLineEdit(self.centralwidget) # 请假登记输入
-        self.lineEdit_leave.setGeometry(QtCore.QRect(860, 600, 101, 31))
+        self.lineEdit_leave.setGeometry(QtCore.QRect(860, 660, 101, 31))
         self.lineEdit_leave.setObjectName("lineEdit_leave")
-        self.label_listName1 = QtWidgets.QLabel(self.centralwidget) # 未到
-        self.label_listName1.setGeometry(QtCore.QRect(880, 410, 50, 30))
-        self.label_listName1.setObjectName("label_listName1")
+        self.bt_listName1 = QtWidgets.QPushButton(self.centralwidget) # 未到
+        self.bt_listName1.setGeometry(QtCore.QRect(880, 410, 50, 30))
+        self.bt_listName1.setObjectName("bt_listName1")
 
         self.bt_output = QtWidgets.QPushButton(self.centralwidget)  # 未到导出
         self.bt_output.setGeometry(QtCore.QRect(980, 410, 50, 30))
@@ -276,7 +276,7 @@ class Ui_MainWindow(object):
         # self.comboBox_location_2.setItemText(7, _translate("MainWindow", "S3FD"))
         self.bt_generator.setText(_translate("MainWindow", "训练模型"))
         self.bt_analyse.setText(_translate("MainWindow", "分析详情"))
-        self.bt_renew.setText(_translate("MainWindow", "手动刷新"))
+        # self.bt_renew.setText(_translate("MainWindow", "手动刷新"))
         # self.label_lcdName2.setText(_translate("MainWindow", "实到"))
         # self.label_class.setText(_translate("MainWindow", "考勤班级"))
         self.bt_check_variation.setText(_translate("MainWindow", "未采集人员"))
@@ -301,7 +301,7 @@ class Ui_MainWindow(object):
         self.label_emo6_6.setText(_translate("MainWindow", "       "))
         # self.label_emo7.setText(_translate("MainWindow", "厌恶"))
         # self.label_emo8.setText(_translate("MainWindow", "轻蔑"))
-        self.label_listName1.setText(_translate("MainWindow", "未到"))
+        self.bt_listName1.setText(_translate("MainWindow", "未到"))
         self.bt_output.setText(_translate("MainWindow", "导出"))
         self.bt_gathering.setText(_translate("MainWindow", "信息采集"))
         # self.label_lcdName1.setText(_translate("MainWindow", "应到"))
