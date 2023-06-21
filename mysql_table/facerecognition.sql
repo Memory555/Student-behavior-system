@@ -92,3 +92,15 @@ INSERT INTO `students` VALUES (23, ' Garcia', '2020002', 'male', '20010109');
 INSERT INTO `students` VALUES (27, 'Moriba', '2020002', 'male', '20030119');
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Table structure for detail
+-- ----------------------------
+DROP TABLE IF EXISTS `detail`;
+CREATE TABLE `studentnums`  (
+  `ID` int(11) NOT NULL,
+  `Name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `Emo` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `Time` datetime NULL DEFAULT NULL,
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------

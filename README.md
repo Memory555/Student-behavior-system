@@ -1,77 +1,28 @@
-# Class Attendance System based on Face Recognition
+# Student-behavior-system
 
-基于人脸识别的课堂考勤系统
-
----
-
-> Contributor : datamonday
->
-> Github Repo : https://github.com/datamonday/Face-Recognition-Class-Attendance-System
->
-> Initial Blog : [基于人脸识别的考勤系统：Python3 + Qt5 + OpenCV3 + OpenFace + MySQL](https://blog.csdn.net/weixin_39653948/article/details/89291751?spm=1001.2014.3001.5502)
->
-> Project Post : 2019.04.14
->
-> Last Update : 2021.05.26
-
----
-# Update: 2021.05.28
-
-- 完善本地人脸和数据库ID核验功能；
-
-- 完善随机答题点名功能；
-
-  ![random_check](./images/random_check.jpg)
+学生行为分析系统
 
 ---
 
-# Update: 2021.05.24-27
+> Contributor : Memory555
+>
+> Reference : https://github.com/datamonday/Face-Recognition-Class-Attendance-System
+>
+> Github Repo ：https://github.com/Memory555/Student-behavior-system
+>
+> Project Post : 2023.06.14
 
-又到毕业季，终于有时间集中进行处理，为了让该项目更容易上手且更鲁棒，主要做了如下更新：
-
-- 对项目进行了重构，使得风格更gayhuber；（！正在进行中）
-- 将所有开放的接口汇总到一个模块  `GlobalVar.py` ，其他文件和目录无需修改，方便修改二次开发；
-- 重新设计了主界面和信息采集界面（有些功能正在开发）；
-- 主界面设定考勤时间，方便调试；
-- 添加了自动采集人脸图像功能；
-- 考勤涉及大量的时间序列操作，因此使用了Pandas和Datetime模块进行处理；
-- 增加了环境配置文件requirements.txt和environment.yaml，对小白更友好；
-- 添加了详细的环境配置和使用教程，更容易配置；
-- 增加了许多提示信息，方便定位错误。
-- 添加了大量的异常处理语句，减少终止运行的情况，方便捕获异常和调试；
-- 集中解决了之前存在的卡顿和闪退问题；
-
-再看两年多前以前写的代码，发现很多都写死了，并且实现思路不甚清晰，导致修复bug的同时又会造成新的bug，所以重写了代码，并将需要修改的参数集中，方便移植。
-
-新界面
-
-![rf_check_sys_v2.0](./images/rf_check_sys_v2.0.jpg)
-
-![rf_check_sys_info_collect_v2.0](./images/rf_check_sys_info_collect_v2.0.jpg)
-
-![students_table](D:\Github\Face-Recognition-Class-Attendance-System\images\students_table.jpg)
-
-暂未完成的一部分功能说明：
-
-![Unfinished part of the function](./images/Unfinished part of the function.jpg)
-
-
-
----
 
 # 1. 项目简介及声明
 
-🎠**本项目使用Python3.6开发（2021-05-23更新到Python3.8）。主要包括四部分：（1）前端界面设计：使用Qt Designer（QT5）设计主界面，PyQt5编写界面控件的槽函数。（2）人脸识别算法：使用Google在2015年提出的人脸识别算法FaceNet进行人脸识别，其中人脸检测部分使用OpenCV提供的ResNet-SSD预训练模型，使用OpenFace开源的基于Inception的FaceNet预训练模型。（3）活体检测部分，使用dlib库的眨眼检测来实现活体识别。（4）信息管理：使用PyMySQL实现学生信息，教室及课表信息，考勤信息的集中统一化管理。**
+**🐱‍👓本项目为大三智慧学习与教育课程设计,非完全原创代码，参考借鉴Github见上方Reference链接**。
 
-本项目针对的是教师或者说是个人使用者这种小范围签到的情况，其实现机制也比较简单。近期也在探索实现全校人脸识别考勤信息统一集中管理，但具体实现比较复杂，相当于将考勤系统和人脸识别融合。一方面考勤系统本身逻辑比较复杂，考虑到的情况比较多，短期内难以实现；另一方面，人脸数据的采集和人脸识别算法的识别上限和准确率决定了能否落地，综合考虑时间因素和学习成本，故暂未更进一步。读者感兴趣可自行探索，欢迎提出建议和解决方案。
-
-**🐱‍👓本项目开始于2018年年末，大概持续了两三个月的时间，2019年4月发布博客并开源，2021年5月重构了代码库。因为本项目仅由一个人开发，能力精力有限，实现了预期的一部分功能，没有经过完整周全的测试，部分功能存在bug（例如活体检测可能出现界面卡死。），但在空余时间还在积极修复，争取实现初衷。如果有不懂的地方或者更好的建议，欢迎在评论区，github，交流群提出。**
-
-**在开发过程中，遇到过许多难题，参考了很多教程，才有了这个项目。相信大家看到这里，一定是在科创比赛或作业中遇到了类似的问题，我也有过类似的经历，很清楚找不到解决方案，自己盲目摸索的苦恼，这也是我选择开源的原因，个人能力有限，但是希望本项目能给需要的小伙伴提供帮助。**
-
-<font color=red>**声明：本人不提供有偿写代码，代做毕业设计，代写毕业论文服务，有违初衷，有这样想法的不用私信和添加好友了！有这时间还不如干自己喜欢干的事！本人也并未授权任何人代表本人提供有偿服务，谨防上当受骗！欢迎提出问题与建议，但不欢迎投机倒把。代码和教程已经是掰开了揉碎了，算是保姆级教程了，多花点时间看代码，很多问题都可以自行解决，别老想着让别人把东西喂到嘴边。**</font>
-
-最后，善用Google，善用Stack Overflow。
+🎠本项目使用Python3.8开发。主要包括四部分：
+- 前端界面设计：使用Qt Designer（QT5）设计主界面，PyQt5编写界面控件的槽函数。
+- 人脸检测算法：使用OpenCV提供的ResNet-SSD预训练模型
+- 人脸识别算法：使用OpenFace开源的基于Inception的FaceNet预训练模型。
+- 表情识别算法：使用OpenVINO模型库中的emotions-recognition-retail-0003人脸表情模型。
+- 信息管理：使用PyMySQL实现学生信息，考勤信息的集中统一化管理。
 
 ---
 
@@ -140,9 +91,7 @@ conda env create -f environment.yaml
 pip install dlib
 ```
 
-安装比较耗时，大概几分钟，成功安装截图：
-![install dlib](./images/install dlib.jpg)
-
+安装比较耗时，大概几分钟.
 
 
 ---
@@ -161,7 +110,11 @@ pip install dlib
 
 ![在这里插入图片描述](./images/info_window.png)
 
+---
 
+## 3.3 行为分析详情界面
+
+![在这里插入图片描述](./images/detail_window.png)
 
 ---
 
@@ -191,27 +144,29 @@ pip install dlib
 
 ![image-20210525223540033](./images/facenet_architecture.png)
 
-（4）如果是训练的话，上一步已经结束了，但是要应用人脸识别算法，还需要在下游任务上实现分类。故本项目中使用支持向量机（Support Vector Machine，SVM）实现对各人脸128维向量的分类任务。**注意：SVM本质上为二分类器，请保证人脸数据库中至少包含两个人！否则可能导致闪退！** 当然也可以使用神经网络或者距离度量实现，可以自行探索。注：SVM使用scikit-learn提供的[SVC API](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)实现。
+（4）如果是训练的话，上一步已经结束了，但是要应用人脸识别算法，还需要在下游任务上实现分类。故本项目中使用支持向量机（Support Vector Machine，SVM）实现对各人脸128维向量的分类任务。<font color=red> **注意：SVM本质上为二分类器，请保证人脸数据库中至少包含两个人！否则可能导致闪退！**</font>
+注：SVM使用scikit-learn提供的[SVC API](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)实现。
 
 - 一个使用SVM进行人脸识别的官方例程：[Faces recognition example using eigenfaces and SVMs](https://scikit-learn.org/stable/auto_examples/applications/plot_face_recognition.html#sphx-glr-auto-examples-applications-plot-face-recognition-py)
 
 ---
 
-## 4.3 活体检测简介
+## 4.3 表情识别简介
 
-因为大量的摄像头设备（尤其是考勤中更少）都不是带景深信息的RGBD摄像机，所以无法当前的人脸图像是真人还是人脸，所以需要被识别人进行主动配合，例如眨眼睛（本项目中使用该方法），摇头（例如支付宝设置人脸支付）等，所以活体检测应用而生了。带有景深信息的摄像机一般分为两种，一种是以微软knits为代表的红外摄像机，例如很多笔记本上的人脸解锁。另一种是以苹果FaceID为代表的3D结构光相机。这些相机扫描的人脸均为3D图像，所以识别上更鲁棒，可以完美对抗视频和图片考勤。
+使用OpenVINO模型库中的emotions-recognition-retail-0003人脸表情模型，该模型是基于全卷积神经网络训练完成，使用ResNet中Block结构构建卷积神经网络。模型训练使用了使用了AffectNet表情数据集，支持五种表情识别，分别是：
+(‘neutral’, ‘happy’, ‘sad’, ‘surprise’, ‘anger’)
 
-但是对于2D摄像机来说，就需要活体检测。本项目中使用开源的dlib库实现人脸特征点的标定，主要利用眨眼的阈值和时长来确定是否为活体。
-
-注意：目前存在一个bug：活体检测开启关闭之后，关闭人脸考勤，再关闭相机时可能导致界面卡死。
+OpenVINO是Inter开发的一套深度学习工具库，用于快速部署应用和解决方案。
+当我们应用Pytorch、Tensorflow和PaddlePaddle训练好模型之后，就面临了模型部署上线问题。OpenVINO是解决这一问题的优秀工具。
+更多内容可查看官方文档介绍：[OpenVINO](https://docs.openvino.ai/cn/2022.1/documentation.html)
 
 ## 4.4 查询考勤信息
 
-通过主界面的查看结果按键，可以查看当前考勤的结果，会在主界面左侧文本框中显示包含迟到和旷课的学生。
+通过主界面的未到按键，可以查看当前未到学生情况，会在主界面左侧文本框中显示包含迟到和旷课的学生，点击导出按键可见结果导出。
 
-## 4.5 查询学生信息
+## 4.5 查询未采集学生信息
 
-通过信息采集界面，实现连接数据库查询学生信息的功能。
+通过主界面的未采集人员按键，实现获知尚未录入人脸信息的学生。
 
 ## 4.6 补签及请假登记
 
@@ -223,28 +178,27 @@ pip install dlib
 
 ## 5.1 数据库可视化工具 Navicat 
 
-使用该软件是为了方便管理维护信息，如果有数据库基础，当然也可以选择其它方式。
-
-## 5.2 创建MySQL数据库
-
-关于本机配置MySQL环境的教程很多，此处不再赘述。仅给出本项目中的创建方式和表格信息。
-
-![在这里插入图片描述](./images/build_mysql_in_navicat.png)
-![在这里插入图片描述](./images/build_mysql_in_navicat2.png)
-![在这里插入图片描述](./images/build_mysql_in_navicat3.png)
-![在这里插入图片描述](./images/build_mysql_in_navicat4.png)
-![在这里插入图片描述](./images/build_mysql_in_navicat5.png)
-
-
+使用该软件是为了方便管理维护信息，也可使用其他数据管理软件。
 
 ---
 
 ## 5.3 MySQL表格及字段说明
 
 其主界面如下：
+
+学生信息表：
 ![在这里插入图片描述](./images/mysql_table1.png)
+
+学生班级表：
 ![在这里插入图片描述](./images/mysql_table2.png)
+
+考勤表:
 ![在这里插入图片描述](./images/mysql_table3.png)
+
+情绪分析详情表：
+![在这里插入图片描述](./images/mysql_table4.png)
+
+
 
 
 ---
@@ -265,41 +219,14 @@ sql = "SELECT * FROM STUDENTS WHERE ID = {}".format(self.input_ID)
 
 ---
 
-## 5.5 本地 Excel 表格说明（测试中）
-
-本部分是打算实现针对全校的考勤系统设计，还不完善。
-
-### Auxiliary_Info.xlsx
-
-包含考勤的辅助信息
-
-### Classroom_Info.xlsx
-
-教室信息
-
-### College_Class_Info.xlsx
-
-学院各班级信息
-
-### Classroom_Course_Schedule.xlsx
-
-教室课程时刻表
-
-### Attendance_Logs.xlsx
-
-考勤日志
-
----
 # 6. 源码介绍及使用🍨 
-## 6.1 代码目录树
-![image-20210525232834845](./images/code_tree.png)
 
 ---
 ## 6.2 关键文件说明
 
-- `model_blink_detection/shape_predictor_68_face_landmarks.dat`：dlib 人脸关键点检测模型，用来实现活体识别（眨眼检测）。
 - `model_face_detection/res10_300x300_ssd_iter_140000.caffemodel`：OpenCV提供的训练好的人脸检测ResNet-SSD模型权重。
 - `model_facenet/openface_nn4.small2.v1.t7`：OpenFace提供的基于Inception的训练好的FaceNet模型权重。
+- `emo/intel/emotions-recognition-retail-0003/FP32:`
 - `mysql_table/facerecognition.sql`：mysql表格。
 
 ---
@@ -318,187 +245,8 @@ sql = "SELECT * FROM STUDENTS WHERE ID = {}".format(self.input_ID)
 2. 修改源码中的数据库连接部分，连接到创建的数据库；
 3. 修改文件`GlobalVar.py` 中的路径；
 4. 采集人脸照片，点击界面中的<kbd>信息采集</kbd>，在子窗口操作即可，注意保证本地文件夹的名称和数据库中的ID对应，每个ID的人脸在100--300张较好；
-5. 回到主界面，点击界面中的<kbd>更新人脸库</kbd>，以训练人脸识别模型；
-6. 开始考勤：<kbd>打开相机</kbd> --> <kbd>开始考勤</kbd>
-7. 活体检测：点击<kbd>活体检测</kbd>；
-8. 查看考勤结果：<kbd>查看结果/kbd>；
-9. ...
-10. Have fun!😊
-
-更详细的教程，稍后更新。
+5. 回到主界面，点击界面中的<kbd>模型训练</kbd>，以训练人脸识别模型；
+6. 开始考勤和行为分析：<kbd>打开相机</kbd> --> <kbd>开始分析</kbd>；
+7. 查看每个学生表情情况：<kbd>分析详情</kbd>；
 
 ---
-
-## 6.5 人脸识别结果
-
-![IU-1-result](D:\Github\Face-Recognition-Class-Attendance-System\images\fr_result_iu.png)
-
-
-
----
-
-# 7. 难题及解决方案
-
-本部分描述了一部分我在调试过程中遇到的问题和解决方法。有部分已经解决，有部分限于时间还没解决。
-
-## 7.1 闪退Bug
-
-总的来说闪退有两种情况导致：
-
-- 一种是你pull到本地之后与我设置的路径不一致，具体需要修改成你自己的路径，注意不要包含中文！
-- 数据库中的ID字段与本地人脸文件夹名不一致！或者本地有人脸信息并训练了模型，但数据库并未导入ID及其信息，所以会导致闪退！
-
-### 1）查看结果按键闪退
-
-原因：数据库的ID字段与本地人脸库的文件夹名称不一致！
-
-### 2）训练模型按键闪退
-
-原因：路径不对！
-
-修改 `GlobalVar.py` 文件中的以下路径为你自己的：
-
-```python
-rootdir = "D:/Github/Face-Recognition-Class-Attendance-System/"
-sys.path.append(rootdir)
-```
-
-### 3）开始识别按键闪退
-
-路径不对！
-
-注意：如果改变了目录树的文件夹名和文件名（主要是所用到的模型）的话，需要修改成你自己的。
-
----
-
-## 7.2 考勤逻辑问题
-
-在考勤结束后，查看考勤结果，如果有人未到，在补签或请假操作之后，应该将其从未到的结果总删除。
-
----
-
-## 7.3 多张人脸处理
-
-一般的人脸核验和考勤都是针对单次单人识别的情况，所以本项目的初衷也是采用这种方式，在使用时让单次单人进行识别。
-
----
-
-## 7.4 单人考勤多人签到
-
-导致这种情况有两个原因：
-
-- **一是单人人脸图像太少，使用SVM的话，建议至少100张，我在实测两个人的情况下，100张效果还可以，不过有建议至少300张**。
-
-- 二是代码不够健壮导致的。代码中为了便于演示，识别到人脸就会进行签到，这是不够鲁棒的，如果出现了误识别就会将其他人进行签到入库。解决方法是：因为人脸识别是逐帧进行的，所以为了保证鲁棒性，可以将每一帧中识别到的最大的人脸保存到一个字典中，设定识别的帧数，比如30帧，统计这30帧中出现人脸次数最多的ID作为进行签到入库的结果，以此来过滤掉弱检测和误识别。这里仅提出我想到的解决方案，当然你也可以用自己的方式，具体如何修改可以自己尝试。
-
----
-
-## 7.5 考勤时间覆盖
-
-要避免考勤时间覆盖的问题。
-
----
-
-## 7.6 提高识别稳定性
-
-1.修改execute中以下部分代码：
-
-```python
-# 确保面部宽度和高度足够大，以过滤掉小人脸(较远)，防止远处人员签到，以及过滤误检测
-if fW < 100 or fH < 100:
-    continue
-```
-
-尽可能减少离讲台较远的人脸对当前识别的干扰，减少误识别。
-
-2.更换尺寸更大的人脸识别模型
-
-本项目中使用的为OpenFace训练的模型，将人脸调整到 96x96x3再进行人脸特征向量的提取。可以选择其它的模型进行提取。
-
-3.通过设置字典，保存多帧检测到的人脸，最后取人脸次数最多的ID，以过滤弱检测和误识别。
-
----
-
-# 8. 待完善功能🚀
-
-## 8.1 系统优化
-解决bug，提升系统运行效率与稳定性。
-## 8.2 隐私保护
-目前还是存储在本地，不安全。可以考虑通过加密存储到数据库中。
-## 8.3 生成考勤日志
-自动统计每个班级的考勤信息，并生成日志。
-## 8.4 从教务系统导入教室课表，保证判定的稳定性
-目前仅仅通过设定的考勤时间统计，不够人性化，应该根据学生的各任课表来统计。
-## 8.5 同时多人考勤
-提升识别效率，比如很多同学同时进教室，如果一人一人识别，则会造成拥堵。
-## 8.6 上传图片识别
-如果系统出现故障，老师可以用手机拍摄照片存档，然后上传系统进行人脸识别考勤。
-## 8.7 开发更稳定的人脸识别
-在可识别人脸数量、所需图片数量、识别速度、移动端部署等因素综合考虑进行改进。
-
-## 8.8 开发更稳定的活体检测
-防止视频等骗过系统。
-
-## 8.9 前沿的人脸识别算法
-
-- InsightFace
-- ArcFace
-- RetinaFace
-- CenterFace
-- CubeFace
-
-## 8.10 前沿的人脸检测算法
-
-- MTCNN
-- Mobilenet
-
----
-# 9. 资料获取及问题交流👏
-由于个人精力有限，无法及时回复还请谅解。有问题欢迎加入QQ群，一起交流！
-
-## 9.1 交流群
-
-<font color=blue> **群号：1062310557**。</font> 二维码：
-![在这里插入图片描述](./images/qq.png)
-
-此外，群文件分享了很多机器学习的经典书籍、教程、论文以及一些前沿论文，感兴趣的可以自取。
-
-![image-20210525222250616](./images/al_qq_documents.png)
-
-
-
-## 9.2 公众号
-
-![qrcode](./images/qrcode.jpg)
-
-<font color=red>**看到这了都，白嫖好意思吗（doge）**</font>
-
----
-# 10. 代码库和博客更新日志
-## 2021.04.25 Update
-- 修复Python3.8以后版本PyMySQL连接函数的参数设置问题。
-- 更新源码。
-- 重构文件目录。
-- 添加数据库。
-
----
-## 2021.04.14 Update
-<font size=4 color=red> 数据库表格已经上传到 [Github](https://github.com/datamonday/Face-Recognition-Class-Attendance-System)</font>
-- 路径：`/02 main/mysql_table`
-
-
----
-## 2020.03.27 Update
-- 关于第一次运行崩溃的问题：参考第五章。
-- Navicat及数据库使用。
-
----
-## 2020.03.26 Update
-- Github压缩包解压失败
-- 解压失败一般是没下载完成导致的，不科学方式下载确实慢。
-
----
-## 2019.04.14 Update
-- 活体检测功能存在bug
-- 主要表现是：人脸识别开启状态下，再开启活体检测再关闭之后，点击关闭摄像头，界面卡死。
-

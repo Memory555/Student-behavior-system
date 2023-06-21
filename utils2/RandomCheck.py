@@ -63,7 +63,6 @@ class RCDialog(QWidget):
 
         self.Dialog.pb_fail.clicked.connect(self.answer_fail)
 
-        # self.Dialog.pb_absence.clicked.connect(self.answer_absence)
 
         self.Dialog.pb_other.clicked.connect(self.answer_other)
 
@@ -88,7 +87,6 @@ class RCDialog(QWidget):
             # 初始化点名列表
             self.random_check_names = deepcopy(self.student_names)
             self.random_check_ids = deepcopy(self.student_ids)
-            # print("[INFO] 查询成功！")
 
     # 随机点名
     def start_random_check(self):
@@ -124,13 +122,9 @@ class RCDialog(QWidget):
     def answer_fail(self):
         print(self.rc_id, self.rc_name, self.current_time, "回答失败")
 
-    # # 未到
-    # def answer_absence(self):
-    #     print(self.rc_id, self.rc_name, self.current_time, "未到")
 
     # 退出
     def answer_other(self):
-        # print(self.rc_id, self.rc_name, self.current_time, "其他情况")
         self.close()
 
     def handle_click(self):

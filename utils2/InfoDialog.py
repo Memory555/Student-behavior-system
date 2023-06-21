@@ -17,9 +17,6 @@ from utils2.GlobalVar import CAMERA_ID, COLLENCT_FACE_NUM_DEFAULT, LOOP_FRAME
 from utils2.GlobalVar import add_path_to_sys, statical_facedata_nums
 rootdir = add_path_to_sys()
 
-# 添加数据库连接操作
-from utils2.GlobalVar import connect_to_sql
-
 
 class InfoDialog(QWidget):
     def __init__(self):
@@ -46,17 +43,12 @@ class InfoDialog(QWidget):
         self.Dialog.bt_start_collect.clicked.connect(self.open_camera)
         # 设置拍照按键连接函数
         self.Dialog.bt_take_photo.clicked.connect(self.take_photo)
-        # # 设置查询信息按键连接函数
-        # self.Dialog.bt_check_info.clicked.connect(self.check_info)
-        # # 设置写入信息按键连接函数
-        # self.Dialog.bt_change_info.clicked.connect(self.change_info)
         # 查看人脸图片数量案件连接函数
         self.Dialog.bt_check_dirs_faces.clicked.connect(self.check_dir_faces_num)
         # 退出
         self.Dialog.bt_exit.clicked.connect(self.check_exit)
 
         # 初始化摄像头
-        # self.cap = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
         self.cap = cv2.VideoCapture()
 
         # 设置默认采集的照片数量
@@ -112,8 +104,6 @@ class InfoDialog(QWidget):
             ret, frame = self.cap.read()
             QApplication.processEvents()
             frame = imutils.resize(frame, width=500)
-            # frame = cv2.putText(frame, "Have token {}/{} faces".format(self.have_token_photos,
-            # self.Dialog.spinBox_set_num.text()), (50, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 100, 50), 2) 显示输出框架
             show_video = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # 这里指的是显示原图
             # opencv读取图片的样式，不能通过Qlabel进行显示，需要转换为Qimage。
             # QImage(uchar * data, int width, int height, int bytesPerLine, Format format)
@@ -141,8 +131,6 @@ class InfoDialog(QWidget):
                     break
             else:
                 QMessageBox.information(self, "Tips", "已退出自动采集模式，请手动采集！")
-                # self.cap.release()
-                # self.Dialog.bt_start_collect.setText('开始采集')
                 break
 
         # 记录上次需要采集的照片数量
@@ -158,9 +146,6 @@ class InfoDialog(QWidget):
             photo_save_path = os.path.join(os.path.dirname(os.path.abspath('__file__')), '{}'.format(self.filename))
             save_filename = datetime.now().strftime("%Y%m%d%H%M%S") + ".png"
             self.showImage.save(photo_save_path + save_filename)
-        # else:
-        #     p = os.path.sep.join([output, "{}.png".format(str(total).zfill(5))])
-        #     cv2.imwrite(p, self.showImage)
 
         self.Dialog.lcdNumber_collection_nums.display(self.have_token_photos)
 
@@ -181,8 +166,6 @@ class InfoDialog(QWidget):
     def take_photo(self):
         if self.cap.isOpened():
             self.collect_photos = int(self.Dialog.spinBox_set_num.text())
-            # print('self.collect_photos: ', self.collect_photos, type(self.collect_photos))
-            # print(self.have_token_photos, type(self.have_token_photos))
             if self.have_token_photos != self.collect_photos:
                 self.have_token_photos += 1
                 try:
@@ -196,64 +179,6 @@ class InfoDialog(QWidget):
         else:
             QMessageBox.information(self, "Information", self.tr("请先打开摄像头！"), QMessageBox.Ok)
 
-    # # 数据库查询
-    # def check_info(self):
-    #     # 获取用户输入的ID的内容，str格式
-    #     self.input_id = self.Dialog.lineEdit_id.text()
-    #     if self.input_id != '':
-    #         # 用于存放统计信息
-    #         lists = []
-    #         # 打开数据库连接
-    #         try:
-    #             db, cursor = connect_to_sql()
-    #         except ConnectionRefusedError as e:
-    #             print("[ERROR] 数据库连接失败！", e)
-    #         # 如果连接数据库成功，则继续执行查询
-    #         else:
-    #             # 查询语句，实现通过ID关键字检索个人信息的功能
-    #             sql = "SELECT * FROM STUDENTS WHERE ID = {}".format(self.input_id)
-    #             # 执行查询
-    #             try:
-    #                 cursor.execute(sql)
-    #                 # 获取所有记录列表
-    #                 results = cursor.fetchall()
-    #                 for i in results:
-    #                     lists.append(i[0])
-    #                     lists.append(i[1])
-    #                     lists.append(i[2])
-    #                     lists.append(i[3])
-    #                     lists.append(i[4])
-    #             except ValueError as e:
-    #                 print("[ERROR] 无法通过当前语句查询！", e)
-    #
-    #             else:
-    #                 # 设置显示数据层次结构，5行2列(包含行表头)
-    #                 table_view_module = QtGui.QStandardItemModel(5, 1)
-    #                 # 设置数据行、列标题
-    #                 table_view_module.setHorizontalHeaderLabels(['属性', '值'])
-    #                 rows_name = ['学号', '姓名', '班级', '性别', '生日']
-    #                 # table_view_module.setVerticalHeaderLabels(['学号', '姓名', '班级', '性别', '生日'])
-    #
-    #                 # 设置填入数据内容
-    #                 lists[0] = self.input_id
-    #                 if len(lists) == 0:
-    #                     QMessageBox.warning(self, "warning", "人脸数据库中无此人信息，请马上录入！", QMessageBox.Ok)
-    #                 else:
-    #                     for row, content in enumerate(lists):
-    #                         row_name = QtGui.QStandardItem(rows_name[row])
-    #                         item = QtGui.QStandardItem(content)
-    #                         # 设置每个位置的行名称和文本值
-    #                         table_view_module.setItem(row, 0, row_name)
-    #                         table_view_module.setItem(row, 1, item)
-    #
-    #                     # 指定显示的tableView控件，实例化表格视图
-    #                     self.Dialog.tableView.setModel(table_view_module)
-    #
-    #                 assert isinstance(db, object)
-    #                 # 关闭数据库连接
-    #         finally:
-    #             cursor.close()
-    #             db.close()
 
     # 检查本地人脸数据信息，包括文件夹名（ID）及图片数量
     def check_dir_faces_num(self):
@@ -281,49 +206,8 @@ class InfoDialog(QWidget):
             # 指定显示的tableView控件，实例化表格视图
             self.Dialog.tableView.setModel(table_view_module)
 
-    # # 将采集信息写入数据库
-    # def write_info(self):
-    #     # 存放信息的列表
-    #     users = []
-    #     # 信息是否完整标志位
-    #     is_info_full = False
-    #     student_id = self.Dialog.lineEdit_id.text()
-    #     name = self.Dialog.lineEdit_name.text()
-    #     which_class = self.Dialog.lineEdit_class.text()
-    #     sex = self.Dialog.lineEdit_sex.text()
-    #     birth = self.Dialog.lineEdit_birth.text()
-    #     users.append((student_id, name, which_class, sex, birth))
-    #     # 如果有空行，为False，则不执行写入数据库操作；反之为True，执行写入
-    #     # Python内置函数all的作用是：如果用于判断的可迭代对象中全为True，则结果为True；反之为False
-    #     if all([student_id, name, which_class, sex, birth]):
-    #         is_info_full = True
-    #     return is_info_full, users
-
-    # # 添加修改信息
-    # def change_info(self):
-    #     # 写入数据库
-    #     try:
-    #         db, cursor = connect_to_sql()
-    #         # 如果存在数据，先删除再写入。前提是设置唯一索引字段或者主键。
-    #         insert_sql = "replace into students(ID, Name, Class, Sex, Birthday) values(%s, %s, %s, %s, %s)"
-    #
-    #         flag, users = self.write_info()
-    #         if flag:
-    #             cursor.executemany(insert_sql, users)
-    #             QMessageBox.warning(self, "Warning", "修改成功，请勿重复操作！", QMessageBox.Ok)
-    #         else:
-    #             QMessageBox.information(self, "Error", "修改失败！请保证每个属性不为空！", QMessageBox.Ok)
-    #     # 捕获所有除系统退出以外的所有异常
-    #     except Exception as e:
-    #         print("[ERROR] sql execute failed!", e)
-    #
-    #     finally:
-    #         # 提交到数据库执行
-    #         db.commit()
-    #         # 关闭数据库
-    #         cursor.close()
-    #         # 关闭数据库连接
-    #         db.close()
 
     def check_exit(self):
+        if self.cap.isOpened():
+            self.cap.release()
         self.close()

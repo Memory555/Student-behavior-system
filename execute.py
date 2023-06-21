@@ -16,23 +16,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QTimer, QDateTime, QCoreApplication, QThread
 from PyQt5.QtGui import QImage, QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QInputDialog
-# 导入频帧画面大小调整包
-from imutils import face_utils
-from imutils.video import VideoStream
-# 导入眨眼检测必要的包
-from scipy.spatial import distance as dist
 
-# 导入UI主界面
-# from ui import MainUI
 # 使用mainwindow类重构
 from ui import mainwindow as MainWindowUI
 
-# 导入打印中文脚本
-from utils2 import PutChineseText
 # 导入人脸识别检测包
 from utils2 import GeneratorModel
-# 导入眨眼检测类
-from utils2.BlinksDetectionThread import BlinksDetectThread
 # 导入信息采集槽函数类
 from utils2.InfoDialog import InfoDialog
 
@@ -42,13 +31,8 @@ from utils2.RandomCheck import RCDialog
 from utils2.GlobalVar import connect_to_sql
 # 导入分析详情槽函数类
 from utils2.Detaillog import Detaillog
-# 导入考勤状态判断相关函数
-# from utils2.AttendanceCheck import attendance_check
-from utils2.GlobalVar import FR_LOOP_NUM, statical_facedata_nums
 
-# # 为方便调试，修改后导入模块，重新导入全局变量模块
-# import importlib
-# importlib.reload(GeneratorModel)
+from utils2.GlobalVar import FR_LOOP_NUM, statical_facedata_nums
 
 import sys
 import os
@@ -57,16 +41,11 @@ from collections import Counter
 # 添加当前路径到环境变量
 sys.path.append(os.getcwd())
 
-# 导入全局变量，主要包含摄像头ID等
-from utils2.GlobalVar import CAMERA_ID
 from utils2.GlobalVar import num_list
 
-import cv2 as cv
 import numpy as np
 from openvino.inference_engine import IECore
 
-# # 全局变量[学号]
-# num_list =[]
 # 全局变量[情绪]
 emo_list = []
 # 全局变量[起始时间]
@@ -89,11 +68,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # 初始化label显示的(黑色)背景
         self.bkg_pixmap = QPixmap('./logo_imgs/bkg1.png')
         # 设置主窗口的logo
-        self.logo = QIcon('./logo_imgs/fcb_logo.jpg')
+        self.logo = QIcon('./logo_imgs/fcb_logo.png')
         # 设置提示框icon
         self.info_icon = QIcon('./logo_imgs/info_icon.jpg')
         # OpenCV深度学习人脸检测器的路径
         self.detector_path = "./model_face_detection"
+        # 情绪识别模型的路径
+        self.temper_path = "./emo/intel/emotions-recognition-retail-0003/FP32"
         # OpenCV深度学习面部嵌入模型的路径
         self.embedding_model = "./model_facenet/openface_nn4.small2.v1.t7"
         # 训练模型以识别面部的路径
@@ -115,29 +96,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # ###################### 摄像头初始化 ######################
         # 初始化摄像头，默认调用第一个摄像头
-        # self.url = 0
         # 如果要调用摄像头1，则设置为1，适用于：笔记本外接USB摄像头
         self.url = 0
         self.cap = cv2.VideoCapture()
-        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 500)
-        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 400)
-        # self.cap.set(cv2.CAP_PROP_FPS, 20)
 
         # ###################### 按键的槽函数 ######################
         # 设置摄像头按键连接函数
         self.ui.bt_open_camera.clicked.connect(self.open_camera)
         # 设置开始分析按键的回调函数
         self.ui.bt_start_check.clicked.connect(self.auto_control)
-        # # 设置退出系统按键的回调函数
-        # self.ui.bt_exit.clicked.connect(self.auto_control)
-        # # 设置活体检测按键的回调函数
-        # self.ui.bt_blinks.clicked.connect(self.blinks_thread)
         # 设置“退出系统”按键事件, 按下之后退出主界面
         self.ui.bt_exit.clicked.connect(self.quit_window)
         # 设置信息采集按键连接
         self.ui.bt_gathering.clicked.connect(self.open_info_dialog)
-        # # 设置分析详情按键连接
-        # self.ui.bt_detailing.clicked.connect(self.open_detail_dialog)
 
         # 设置区分打开摄像头还是人脸识别的标识符
         self.switch_bt = 0
@@ -162,13 +133,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.bt_output.clicked.connect(self.import_late_absence)
         # 核验本地人脸数据集与数据库中的ID是否一致，即验证是否有未录入数据库的情况，以及是否有未采集人脸的情况。
         self.ui.bt_check_variation.clicked.connect(self.check_variation_db)
+        # self.check_time_set = '08:00:00'
 
-        # self.check_time_set, ok = QInputDialog.getText(self, '考勤时间设定', '请输入考勤时间(格式为00:00:00):')
-        self.check_time_set = '08:00:00'
-
-        # # 设置输入考勤时间的限制
-        # self.ui.spinBox_time_hour.setRange(0, 23)
-        # self.ui.spinBox_time_minute.setRange(0, 59)
 
     # 显示系统时间以及相关文字提示函数
     def show_time_text(self):
@@ -183,7 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
         current_datetime = QDateTime.currentDateTime().toString()
         self.ui.label_time.setText("" + current_datetime)
 
-        # 显示“人脸识别考勤系统”文字
+        # 显示“人脸识别分析系统”文字
         self.ui.label_title.setFixedWidth(400)
         self.ui.label_title.setStyleSheet("QLabel{font-size:26px; font-weight:bold; font-family:宋体;}")
         self.ui.label_title.setText("学生行为分析系统")
@@ -194,6 +160,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.label_logo.clear()
             # 默认打开Windows系统笔记本自带的摄像头，如果是外接USB，可将0改成1
             self.cap.open(self.url)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
+            # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
             self.show_camera()
         else:
             self.cap.release()
@@ -201,19 +169,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.label_camera.clear()
             self.ui.bt_open_camera.setText(u'打开相机')
 
-    # def exit(self):
-    #     # 退出系统
 
-    # 进入考勤模式，通过switch_bt进行控制的函数
+    # 进入情绪分析模式，通过switch_bt进行控制的函数
     def auto_control(self):
-        # self.check_time_set = self.format_check_time_set()
-        # if self.check_time_set == '':
-        #     QMessageBox.warning(self, "Warning", "请先设定考勤时间(例 08:00)！", QMessageBox.Ok)
-        # else:
         if self.cap.isOpened():
             if self.switch_bt == 0:
                 self.switch_bt = 1
-                # QMessageBox.information(self, "Tips", f"您设定的考勤时间为：{self.check_time_set}", QMessageBox.Ok)
                 self.ui.bt_start_check.setText(u'退出分析')
                 self.show_camera()
             elif self.switch_bt == 1:
@@ -224,20 +185,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 print("[Error] The value of self.switch_bt must be zero or one!")
         else:
             QMessageBox.information(self, "Tips", "请先打开摄像头！", QMessageBox.Ok)
-
-    # def blinks_thread(self):
-    #     bt_text = self.ui.bt_blinks.text()
-    #     if self.cap.isOpened():
-    #         if bt_text == '活体检测':
-    #             # 初始化眨眼检测线程
-    #             self.startThread = BlinksDetectThread()
-    #             self.startThread.start()  # 启动线程
-    #             self.ui.bt_blinks.setText('停止检测')
-    #         else:
-    #             self.ui.bt_blinks.setText('活体检测')
-    #             # self.startThread.terminate()  # 停止线程
-    #     else:
-    #         QMessageBox.information(self, "Tips", "请先打开摄像头！", QMessageBox.Ok)
 
     def show_camera(self):
         # 如果按键按下
@@ -303,6 +250,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     (h, w) = frame.shape[:2]
                     # 从图像构造一个blob, 缩放为 300 x 300 x 3 像素的图像，为了符合ResNet-SSD的输入尺寸
                     # OpenCV Blog的使用可参考：https://www.pyimagesearch.com/2017/11/06/deep-learning-opencvs-blobfromimage-works/
+                    # 如果与情绪识别统一尺寸64x64，识别框对于小物体很难找到
                     image_blob = cv2.dnn.blobFromImage(
                         cv2.resize(frame, (300, 300)), 1.0, (300, 300),
                         (104.0, 177.0, 123.0), swapRB=False, crop=False)
@@ -315,8 +263,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     face_names = []
                     # 初始化一个列表，用于保存识别到的情绪
                     emo_txt = []
-                    # # 初始化一个列表，用于保存识别到的姓名
-                    # student_name = []
 
                     # 在检测结果中循环检测
                     # 注意：这里detection为ResNet-SSD网络的输出，与阈值的设置有关，具体可以参考prototxt文件的输出层，输出shape为[1, 1, 200, 7]
@@ -339,20 +285,14 @@ class MainWindow(QtWidgets.QMainWindow):
                             # x_left_bottom, y_left_bottom, x_right_top, y_right_top
                             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                             (startX, startY, endX, endY) = box.astype("int")
-                            # left = detections[0, 0, i, 3] * w
-                            # top = detections[0, 0, i, 4] * h
-                            # right = detections[0, 0, i, 5] * w
-                            # bottom = detections[0, 0, i, 6] * h
-
 
                             roi = frame[startY:endY, startX:endX, :]
                             image = cv2.resize(roi, (64, 64))
-                            # image = cv2.resize(roi, (300, 300))
-                            image = image.transpose((2, 0, 1))  # Change data layout from HWC to CHW
+                            image = image.transpose((2, 0, 1))  # Change data layout from HWC to CHW 翻转
 
                             # 加载FaceNet人脸识别模型
-                            model_xml = "E:/soft/smart/Face-Recognition-Class-Attendance-System-master/emo/intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml"
-                            model_bin = "E:/soft/smart/Face-Recognition-Class-Attendance-System-master/emo/intel/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.bin"
+                            model_xml = self.temper_path + "/emotions-recognition-retail-0003.xml"
+                            model_bin = self.temper_path +  "/emotions-recognition-retail-0003.bin"
 
                             labels = ['neutral', 'happy', 'sad', 'surprise', 'anger']
 
@@ -362,15 +302,11 @@ class MainWindow(QtWidgets.QMainWindow):
                             input_blob = next(iter(emotion_net.input_info))
 
                             exec_net = ie.load_network(network=emotion_net, device_name="CPU", num_requests=2)
+
                             res = exec_net.infer(inputs={input_blob: [image]})
                             prob_emotion = res['prob_emotion']
                             probs = np.reshape(prob_emotion, 5)
                             txt = labels[np.argmax(probs)] # 取概率最大的情绪
-                            # cv2.putText(frame, txt, (np.int32(left), np.int32(top)), cv2.FONT_HERSHEY_SIMPLEX, 1.0,
-                            #            (255, 0, 0), 2)
-                            # cv2.rectangle(frame, (np.int32(left), np.int32(top)),
-                            #              (np.int32(right), np.int32(bottom)), (0, 0, 255), 2, 8, 0)
-                            # print(txt)
 
                             # 提取面部ROI
                             # 提取人脸的长和宽，本例中为 397 x 289
@@ -473,36 +409,14 @@ class MainWindow(QtWidgets.QMainWindow):
                                 if flag == 0:
                                     temp.append(i)
 
+                            res = 0
                             for i in temp:
                                 # 已经不在识别框的学号剔除
-                                del num_list[i]
-                                del emo_list[i]
-                                del start_time[i]
-                                del student_name_list[i]
-                                # # 删除数据库对应内容
-                                # try:
-                                #     # 打开数据库连接
-                                #     db, cursor = connect_to_sql()
-                                # except ConnectionError as e:
-                                #     print("[Error] 数据库连接失败！")
-                                # # 删除数据
-                                # num = 0
-                                # try:
-                                #     num = int(num_list[i])
-                                #     # print("num",num)
-                                #     sql = "delete from detail where ID = {}".format(num)
-                                #     cursor.execute(sql)
-                                # # except ConnectionAbortedError as e:
-                                # #     self.ui.textBrowser_log.append("[INFO] 数据删除失败!")
-                                # # else:
-                                # #     self.ui.textBrowser_log.append("[INFO] 数据写入成功!")
-                                # finally:
-                                #     # 提交到数据库执行
-                                #     db.commit()
-                                #     cursor.close()
-                                #     db.close()
-                            # global num_global
-                            num_global = num_list
+                                del num_list[i-res]
+                                del emo_list[i-res]
+                                del start_time[i-res]
+                                del student_name_list[i-res]
+                                res = res + 1 # 删除后全部下标前移一个
                             for kk in range(len(num_list)):
                                 # 写入数据库中（建立新表）
                                 try:
@@ -511,18 +425,12 @@ class MainWindow(QtWidgets.QMainWindow):
                                 except ConnectionError as e:
                                     print("[Error] 数据库连接失败！")
                                 self.line_text_info3.append((num_list[kk], student_name_list[kk], emo_list[kk], start_time[kk]))
-                                # print("line_text_info3", self.line_text_info3)
                                 # 写入数据库
                                 try:
                                     # 如果存在数据，先删除再写入。前提是设置唯一索引字段或者主键。
                                     insert_sql3 = "replace into detail(ID, Name, Emo, starttime) values(%s, %s, %s, %s)"
                                     users3 = self.line_text_info3
                                     cursor.executemany(insert_sql3, users3)
-                                # except ConnectionAbortedError as e:
-                                #     self.ui.textBrowser_log.append("[INFO] 数据库写入失败!")
-                                # else:
-                                #     self.ui.textBrowser_log.append("[INFO] 数据库写入成功!")
-                                    # QMessageBox.information(self, "Tips", "签到成功，请勿重复操作！", QMessageBox.Ok)
                                 finally:
                                     # 提交到数据库执行
                                     db.commit()
@@ -561,14 +469,6 @@ class MainWindow(QtWidgets.QMainWindow):
                             if step5 == 0:
                                 self.ui.label_emo4_4.setText('0.00%')
 
-                    # face_names1 = face_names # 保存上一次的结果
-                    # emo_txt1 = emo_txt
-
-                    # bt_liveness = self.ui.bt_blinks.text()
-                    # if bt_liveness == '停止检测':
-                    #     ChineseText = PutChineseText.put_chinese_text('./utils2/microsoft.ttf')
-                    #     frame = ChineseText.draw_text(frame, (330, 80), ' 请眨眨眼睛 ', 25, (55, 255, 55))
-
                     # 显示输出框架
                     show_video = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # 这里指的是显示原图
                     # opencv读取图片的样式，不能通过Qlabel进行显示，需要转换为Qimage。
@@ -578,8 +478,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.label_camera.setPixmap(QPixmap.fromImage(self.showImage))
 
                     if loop_num == FR_LOOP_NUM:
-                        # print(self.face_name_dict)
-                        # print(face_names)
                         # 找到10帧中检测次数最多的人脸
                         # Python字典按照值的大小降序排列，并返回键值对元组
                         # 第一个索引[0]表示取排序后的第一个键值对，第二个索引[0]表示取键
@@ -588,9 +486,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         # 将当前帧检测到次数最多的人脸保存到self.set_name集合中
                         self.set_name = set()
                         self.set_name.add(most_id_in_dict)
-                        # self.set_name = set(face_names)
                         self.set_names = tuple(self.set_name)
-                        # print(self.set_name, self.set_names)
 
                         self.record_names()
                         self.face_name_dict = dict(zip(le.classes_, len(le.classes_) * [0]))
@@ -617,8 +513,6 @@ class MainWindow(QtWidgets.QMainWindow):
             # 将集合变成tuple，并统计人数
             self.write_data = tuple(self.different_name)
             names_num = len(self.write_data)
-            # # 显示签到人数
-            # self.ui.lcd_2.display(len(self.record_name))
 
             if names_num > 0:
                 # 将签到信息写入数据库
@@ -633,14 +527,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     current_time = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                     results2 = self.use_id_get_info(self.write_data[0])
 
-                    # 判断是否迟到，在这里只考虑正常情况，没有没有设置考勤时间的按钮
+                    # 判断是否迟到，在这里只考虑正常情况，没有设置考勤时间的按钮
                     self.now = datetime.now()
-                    # self.attendance_state = attendance_check(self.check_time_set)
                     self.attendance_state = '正常'
                     self.line_text_info.append((results2[0], results2[1], results2[2],
                                                 current_time,
                                                 self.attendance_state))
-                    print(self.line_text_info)
 
                 # 写入数据库
                 try:
@@ -652,109 +544,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.textBrowser_log.append("[INFO] 数据库写入失败!")
                 else:
                     self.ui.textBrowser_log.append("[INFO] 数据库写入成功!")
-                    # QMessageBox.information(self, "Tips", "签到成功，请勿重复操作！", QMessageBox.Ok)
                 finally:
                     # 提交到数据库执行
                     db.commit()
                     cursor.close()
                     db.close()
 
-    # # 查询班级人数
-    # def check_nums(self):
-    #     # 选择的班级
-    #     global db
-    #     input_class = self.ui.comboBox_class.currentText()
-    #     # print("[INFO] 你当前选择的班级为:", input_class)
-    #     if input_class != '':
-    #         try:
-    #             # 打开数据库连接, 使用cursor()方法获取操作游标
-    #             db, cursor = connect_to_sql()
-    #         except ValueError:
-    #             self.ui.textBrowser_log.append("[ERROR] 连接数据库失败！")
-    #         else:
-    #             self.ui.textBrowser_log.append("[INFO] 连接数据库成功，正在执行查询...")
-    #             # 查询语句，实现通过ID关键字检索个人信息的功能
-    #             sql = "select * from studentnums where class = {}".format(input_class)
-    #             cursor.execute(sql)
-    #             # 获取所有记录列表
-    #             results = cursor.fetchall()
-    #             self.nums = []
-    #             for i in results:
-    #                 self.nums.append(i[1])
-    #
-    #             # 用于查询每班的实到人数
-    #             sql2 = "select * from checkin where class = {}".format(input_class)
-    #             cursor.execute(sql2)
-    #
-    #             # 获取所有记录列表
-    #             results2 = cursor.fetchall()
-    #             self.ui.textBrowser_log.append("[INFO] 查询成功！")
-    #
-    #             # 设定考勤时间
-    #             self.check_time_set = self.format_check_time_set()
-    #
-    #             if self.check_time_set != '':
-    #                 QMessageBox.information(self, "Tips", "您设定的考勤时间为{}".format(self.check_time_set), QMessageBox.Ok)
-    #
-    #                 have_checked_id = self.process_check_log(results2)
-    #                 self.nums2 = len(np.unique(have_checked_id))
-    #                 # print(self.nums2)
-    #
-    #             else:
-    #                 QMessageBox.warning(self, "Warning", "请先设定考勤时间(例 08:00)！", QMessageBox.Ok)
-    #
-    #         finally:
-    #             # lcd控件显示人数
-    #             self.ui.lcd_1.display(self.nums[0])
-    #             self.ui.lcd_2.display(self.nums2)
-    #             # 关闭数据库连接
-    #             db.close()
-
-    # # 格式化设定的考勤时间
-    # def format_check_time_set(self):
-    #     """
-    #     格式化考勤时间，方便比较
-    #     :return: datetime.datetime格式，相见之后为timedelta格式，具有seconds，hours，minutes，days属性
-    #     """
-    #     # 获取完整的时间格式
-    #     now = datetime.now()
-    #     # 分别获取当前的年，月，日，时，分，秒，均为int类型
-    #     judg_time = now
-    #     now_y = judg_time.year
-    #     now_m = judg_time.month
-    #     now_d = judg_time.day
-    #
-    #     original_hour = str(self.ui.spinBox_time_hour.text())
-    #     original_minute = str(self.ui.spinBox_time_minute.text())
-    #     condition_hour = int(self.ui.spinBox_time_hour.text())
-    #     condition_minute = int(self.ui.spinBox_time_minute.text())
-    #
-    #     if condition_hour < 10 and condition_minute < 10:
-    #         check_time_set = "0" + original_hour + ":" + "0" + original_minute + ":" + "00"
-    #     elif condition_hour < 10 and condition_minute >= 10:
-    #         check_time_set = "0" + original_hour + ":" + original_minute + ":" + "00"
-    #     elif condition_hour >= 10 and condition_minute < 10:
-    #         check_time_set = original_hour + ":" + "0" + original_minute + ":" + "00"
-    #     elif condition_hour >= 10 and condition_minute >= 10:
-    #         check_time_set = original_hour + ":" + original_minute + ":" + "00"
-    #     else:
-    #         check_time_set = "08:00:00"
-    #
-    #     # 格式化考勤时间
-    #     att_time = datetime.strptime(f'{now_y}-{now_m}-{now_d} {check_time_set}', '%Y-%m-%d %H:%M:%S')
-    #
-    #     return att_time
-
-    # # 从结果中筛选已经签到的人数
-    # def process_check_log(self, results):
-    #     # 从所有考勤记录中筛选考勤时间之后的记录，并针对id取unique操作
-    #     have_checked_id = []
-    #     for item in results:
-    #         # item[3]为每条考勤记录的考勤时间
-    #         # 如果打卡时间 - 考勤时间设定 在考勤时间截止前1小时和一节大课之间内 则统计考勤记录
-    #         if (abs((item[3] - self.check_time_set).seconds) < 60 * 60) or (item[3] - self.check_time_set).seconds > 0:
-    #             have_checked_id.append(int(item[1]))
-    #     return have_checked_id
 
     # 请假/补签登记
     def leave_button(self):
@@ -788,7 +583,6 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(results) != 0:
                 try:
                     self.ui.textBrowser_log.append("[INFO] 正在从数据库获取当前用户信息...")
-                    print(results[0], results[1], results[2], currentTime, self.description)
                     self.lineTextInfo.append((results[0], results[1], results[2],
                                                 currentTime,
                                                 self.description))
@@ -820,9 +614,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lineEdit_leave.clear()
         self.ui.lineEdit_supplement.clear()
 
-    # # 考勤结束后，将班级内未签到的学生设为旷课
-    # def set_rest_absenteeism(self):
-    #     pass
 
     # 核验本地人脸与数据库信息是否一致
     def check_variation_db(self):
@@ -840,9 +631,6 @@ class MainWindow(QtWidgets.QMainWindow):
             for item in results:
                 self.student_ids.append(item[0])
                 self.student_names.append(item[1])
-            # 初始化点名列表
-            # self.random_check_names = deepcopy(self.student_names)
-            # self.random_check_ids = deepcopy(self.student_ids)
             print('[INFO] 当前班级内的成员包括：', self.student_ids, self.student_names)
             # 统计本地人脸数据信息
             num_dict = statical_facedata_nums()
@@ -850,8 +638,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.keys = []
             for key in list(num_dict.keys()):
                 self.keys.append(int(key))
-            # print(set(self.student_ids))
-            # print(set(self.keys))
             self.check_variation_set_operate()
         finally:
             db.commit()
@@ -871,25 +657,20 @@ class MainWindow(QtWidgets.QMainWindow):
         db_diff_set = union_set - set(self.keys)
 
         if len(union_set) == 0:
-            # QMessageBox.critical(self, "Error", "本地人脸库名称与数据库均未录入信息，请先录入！", QMessageBox.Ok)
             self.ui.textBrowser_log.append('[Error] 本地人脸库名称与数据库均未录入信息，请先录入！')
             print('[Error] union_set:', union_set)
         elif len(inter_set) == 0 and len(union_set) != 0:
-            # QMessageBox.critical(self, "Error", "本地人脸库名称与数据库完全不一致，请先修改！", QMessageBox.Ok)
             self.ui.textBrowser_log.append('[Error] 本地人脸库名称与数据库完全不一致，请先修改！')
             print('[Error] inter_set:', inter_set)
         elif len(two_diff_set) == 0 and len(union_set) != 0:
-            # QMessageBox.information(self, "Success", "核验完成，未发现问题！", QMessageBox.Ok)
             self.ui.textBrowser_log.append('[Success] 核验完成，未发现问题！')
             print('[Success] two_diff_set:', two_diff_set)
 
         elif len(local_diff_set) != 0:
-            # QMessageBox.warning(self, "Warning", "数据库中以下ID的人脸信息还未采集，请抓紧采集！", QMessageBox.Ok)
             self.ui.textBrowser_log.append('[Warning] 数据库中以下ID的人脸信息还未采集，请抓紧采集！')
             self.ui.textBrowser_log.append(str(local_diff_set))
             print('[Warning] local_diff_set:', local_diff_set)
         elif len(db_diff_set) != 0:
-            # QMessageBox.warning(self, "Warning", "本地人脸以下ID的信息还未录入数据库，请抓紧录入！", QMessageBox.Ok)
             self.ui.textBrowser_log.append('[Warning] 本地人脸以下ID的信息还未录入数据库，请抓紧录入！')
             self.ui.textBrowser_log.append(str(db_diff_set))
             print('[Warning] db_diff_set:', db_diff_set)
@@ -933,7 +714,6 @@ class MainWindow(QtWidgets.QMainWindow):
             # 执行查询，全部学生
             cursor.execute(sql)
             results = cursor.fetchall()
-            # print("results", results)
             self.student_ids = []
             self.student_names = []
             self.student_class = []
@@ -942,16 +722,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.student_ids.append(item[0])
                 self.student_names.append(item[1])
                 self.student_class.append(item[2])
-                # self.student_time.append(item[3])
 
             # 执行查询，已经到了的
             cursor.execute(sql2)
             result2 = cursor.fetchall()
-            # print("result2",result2)
             self.student_ids2 = []
             self.student_names2 = []
             self.student_class2 = []
-            # self.student_time = []
             current_year = datetime.now().year
             current_month= datetime.now().month
             current_day = datetime.now().day
@@ -981,7 +758,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     id = self.student_ids[i]
                     num = QtGui.QStandardItem(str(id))
                     name = self.student_names[i]
-                    # print("name",name)
                     name = QtGui.QStandardItem(name)
                     Class = self.student_class[i]
                     Class = QtGui.QStandardItem(Class)
@@ -1009,25 +785,20 @@ class MainWindow(QtWidgets.QMainWindow):
             # 执行查询，全部学生
             cursor.execute(sql)
             results = cursor.fetchall()
-            # print("results", results)
             self.student_ids = []
             self.student_names = []
             self.student_class = []
-            # self.student_time = []
             for item in results:
                 self.student_ids.append(item[0])
                 self.student_names.append(item[1])
                 self.student_class.append(item[2])
-                # self.student_time.append(item[3])
 
             # 执行查询，已经到了的
             cursor.execute(sql2)
             result2 = cursor.fetchall()
-            # print("result2",result2)
             self.student_ids2 = []
             self.student_names2 = []
             self.student_class2 = []
-            # self.student_time = []
             current_year = datetime.now().year
             current_month= datetime.now().month
             current_day = datetime.now().day
@@ -1075,8 +846,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.cap.isOpened():
             QMessageBox.warning(self, "Warning", "为防止摄像头冲突，已自动关闭摄像头！", QMessageBox.Ok)
             self.cap.release()
-
-    # def open_detail_dialog(self):
 
 
     def quit_window(self):

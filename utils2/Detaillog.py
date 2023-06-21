@@ -4,8 +4,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QImage, QIcon, QPixmap
 from PyQt5.QtCore import QCoreApplication, QThread
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QInputDialog
-# 将根目录（execute所在目录）添加到环境变量
-# from utils2.GlobalVar import add_path_to_sys, statical_facedata_nums
 from utils2.GlobalVar import num_list
 
 # 导入分析详情框界面
@@ -32,8 +30,6 @@ class Detaillog(QWidget):
             self.setWindowIcon(QIcon(f'{rootdir}/logo_imgs/fcb_logo.jpg'))
         except FileNotFoundError as e:
             print("[ERROR] UI背景图片路径不正确！(source file: {})".format(self.current_filename), e)
-        # else:
-        #     print("[INFO] 设置icon成功！")
 
         self.Dialog.pb_other.clicked.connect(self.answer_other)
         self.Dialog.pb_exit.clicked.connect(self.pd_exit)
@@ -73,7 +69,6 @@ class Detaillog(QWidget):
             for i in num_list:
                 id = int(i) # 要显示的学号
                 k = self.student_ids.index(id)
-                # id = self.student_ids[i]
                 num = QtGui.QStandardItem(str(id))
                 name = self.student_names[k]
                 name = QtGui.QStandardItem(name)
