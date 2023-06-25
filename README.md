@@ -153,10 +153,12 @@ pip install dlib
 
 ## 4.3 表情识别简介
 
-使用OpenVINO模型库中的emotions-recognition-retail-0003人脸表情模型，该模型是基于全卷积神经网络训练完成，使用ResNet中Block结构构建卷积神经网络。模型训练使用了使用了AffectNet表情数据集，支持五种表情识别，分别是：
-(‘neutral’, ‘happy’, ‘sad’, ‘surprise’, ‘anger’)
+表情识别使用OpenVINO模型库中的emotions-recognition-retail-0003人脸表情模型实现。该模型基于深度学习技术，使用卷积神经网络（CNN）架构进行训练，可以识别出七种不同的表情，包括生气、厌恶、恐惧、开心、平静、伤心和惊讶。
+该模型使用的数据集是FER2013（Faces Emotion Recognition），包含35,887张48x48像素的灰度图像，其中28,709张用于训练，3,589张用于验证，3,589张用于测试。该数据集中的每个图像都被标记为七种不同的情感之一。
+emotions-recognition-retail-0003模型的输入是一张人脸图像，输出是一个大小为7的向量，每个元素代表一个表情。模型的精度在FER2013测试集上达到了66.49%的准确率，可以在不同的嵌入式设备上进行加速和部署。
+该模型适用于多个领域的应用，如虚拟现实、智能医疗、安防监控、智能客服等，可以帮助人们更好地理解和识别人类情感。
 
-OpenVINO是Inter开发的一套深度学习工具库，用于快速部署应用和解决方案。
+此外，OpenVINO是Inter开发的一套深度学习工具库，用于快速部署应用和解决方案。
 当我们应用Pytorch、Tensorflow和PaddlePaddle训练好模型之后，就面临了模型部署上线问题。OpenVINO是解决这一问题的优秀工具。
 更多内容可查看官方文档介绍：[OpenVINO](https://docs.openvino.ai/cn/2022.1/documentation.html)
 
